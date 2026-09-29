@@ -3,7 +3,6 @@ import Card from "@/components/ui/Card";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { subjects } from "@/lib/mock/subjects";
 import { topics } from "@/lib/mock/topics";
-import PageLock from "@/components/student/PageLock";
 
 export default function ProgressPage() {
   const subjectProgress = subjects.map((s) => {
@@ -30,7 +29,6 @@ export default function ProgressPage() {
   return (
     <div>
       <StudentHeader title="Progress" />
-      <PageLock label="Subscribe to track your progress.">
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
         <Card className="text-center">
           <p className="text-sm text-text-muted">Overall progress</p>
@@ -84,7 +82,6 @@ export default function ProgressPage() {
           </div>
         )}
       </div>
-      </PageLock>
     </div>
   );
 }

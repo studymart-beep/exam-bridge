@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSubjectBySlug } from "@/lib/mock/subjects";
-import PageLock from "@/components/student/PageLock";
 import GeneralCbtRedirect from "@/components/student/GeneralCbtRedirect";
 
 interface Props {
@@ -14,7 +13,6 @@ export default async function SubjectGeneralCbtPage({ params }: Props) {
   if (!subject) notFound();
 
   return (
-    <PageLock label="Subscribe to take this exam.">
       {subject.generalCbtId ? (
         <GeneralCbtRedirect examId={subject.generalCbtId} />
       ) : (
@@ -25,6 +23,5 @@ export default async function SubjectGeneralCbtPage({ params }: Props) {
           </Link>
         </div>
       )}
-    </PageLock>
   );
 }
