@@ -97,6 +97,20 @@ export default function DashboardPage() {
           </div>
         </div>
 
+
+        {/* NOTE: Subscription enforcement is intentionally disabled. */}
+        {currentUser.subscription.status !== "active" && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800">Your subscription is inactive</p>
+              <p className="text-xs text-amber-700 mt-0.5">Subscribe to unlock full access. You can still browse all content for now.</p>
+            </div>
+            <Link href="/subscribe" className="inline-flex items-center justify-center h-10 px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-hover">
+              Subscribe
+            </Link>
+          </div>
+        )}
+
         {/* Continue Learning */}
         <Card>
           <div className="flex items-center justify-between mb-3">
@@ -111,7 +125,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           <Link
-            href={`/courses/${continueLearning.courseId}/topics/${continueLearning.topicId}`}
+            href={`/subjects/${continueLearning.subjectSlug}/topics/${continueLearning.topicId}`}
             className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
           >
             <div

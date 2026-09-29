@@ -45,7 +45,7 @@ export default function AdminSubjectTopicsPage() {
         ...prev,
         {
           id: `topic-${Date.now()}`,
-          courseId: "",
+          
           subjectId,
           ...data,
           order: prev.length + 1,
@@ -72,22 +72,31 @@ export default function AdminSubjectTopicsPage() {
         }
       />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-3">
-        <Link href="/admin/subjects" className="text-sm text-primary hover:underline">← Back to subjects</Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/subjects" className="text-sm text-primary hover:underline">← Back to subjects</Link>
+          <Link href={`/admin/subjects/${subjectId}/cbt`} className="text-sm text-primary hover:underline ml-auto">
+            Manage general CBT →
+          </Link>
+        </div>
         {topics.map((t) => (
           <Card key={t.id} className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-text-muted font-medium">#{t.order}</span>
                 <h3 className="font-heading font-semibold text-text-primary">{t.title}</h3>
                 <Badge variant={t.published ? "success" : "default"} size="sm">
                   {t.published ? "Live" : "Draft"}
                 </Badge>
+                {t.hasCbt && <Badge variant="info" size="sm">CBT</Badge>}
               </div>
               <p className="text-xs text-text-muted mt-0.5">{t.duration} · {t.description}</p>
             </div>
             <div className="flex gap-2 flex-wrap">
               <Link href={`/admin/topics/${t.id}/materials`}>
                 <Button size="sm" variant="outline">Manage content</Button>
+              </Link>
+              <Link href={`/admin/topics/${t.id}/cbt`}>
+                <Button size="sm" variant="ghost">CBT</Button>
               </Link>
               <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setModal(true); }}>Edit</Button>
               <Button size="sm" variant="ghost" className="text-error" onClick={() => setDeleteId(t.id)}>Delete</Button>

@@ -12,14 +12,13 @@ import type { Topic } from "@/types";
 
 interface TopicDetailClientProps {
   topic: Topic;
-  courseId: string;
+  subjectSlug: string;
 }
 
 const tabs = ["Video", "PDF", "Images"] as const;
 
 export default function TopicDetailClient({
   topic,
-  courseId,
 }: TopicDetailClientProps) {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Video");
   const [completed, setCompleted] = useState(topic.completed);
@@ -32,7 +31,6 @@ export default function TopicDetailClient({
 
   return (
     <div className="space-y-5">
-      {/* Tabs */}
       <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
         {tabs.map((tab) => (
           <button
@@ -50,18 +48,10 @@ export default function TopicDetailClient({
         ))}
       </div>
 
-      {/* Content */}
-      {activeTab === "Video" && (
-        <VideoPlayer title={topic.title} />
-      )}
-      {activeTab === "PDF" && (
-        <PDFViewer title={`${topic.title} Notes`} />
-      )}
-      {activeTab === "Images" && (
-        <ImageGallery />
-      )}
+      {activeTab === "Video" && <VideoPlayer title={topic.title} />}
+      {activeTab === "PDF" && <PDFViewer title={`${topic.title} Notes`} />}
+      {activeTab === "Images" && <ImageGallery />}
 
-      {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
         {topic.hasCbt && topic.cbtId && (
           <Link href={`/cbt/${topic.cbtId}`} className="flex-1">
@@ -78,18 +68,8 @@ export default function TopicDetailClient({
           variant={completed ? "secondary" : "outline"}
           onClick={handleMarkComplete}
           disabled={completed}
-          className="flex-1"
         >
-          {completed ? (
-            <>
-              <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Completed
-            </>
-          ) : (
-            "Mark as Complete"
-          )}
+          {completed ? "Completed" : "Mark complete"}
         </Button>
       </div>
     </div>

@@ -6,14 +6,12 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import type { AdminCbtExam } from "@/types";
 import { adminSubjects } from "@/lib/mock/adminSubjects";
-import { adminCourses } from "@/lib/mock/adminCourses";
 
 interface ExamFormProps {
   initial?: Partial<AdminCbtExam>;
   onSubmit: (data: {
     title: string;
     subjectId: string;
-    courseId: string;
     durationMinutes: number;
     passMark: number;
   }) => void;
@@ -24,19 +22,15 @@ interface ExamFormProps {
 export default function ExamForm({ initial, onSubmit, onCancel, loading }: ExamFormProps) {
   const [title, setTitle] = useState(initial?.title || "");
   const [subjectId, setSubjectId] = useState(initial?.subjectId || "");
-  const [courseId, setCourseId] = useState(initial?.courseId || "");
   const [duration, setDuration] = useState(String(initial?.durationMinutes || 30));
   const [passMark, setPassMark] = useState(String(initial?.passMark || 50));
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const courses = adminCourses.filter((c) => !subjectId || c.subjectId === subjectId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const err: Record<string, string> = {};
     if (!title.trim()) err.title = "Title is required";
     if (!subjectId) err.subjectId = "Subject is required";
-    if (!courseId) err.courseId = "Course is required";
     const d = parseInt(duration, 10);
     const p = parseInt(passMark, 10);
     if (!d || d < 1) err.duration = "Valid duration required";
@@ -44,7 +38,7 @@ export default function ExamForm({ initial, onSubmit, onCancel, loading }: ExamF
     setErrors(err);
     if (Object.keys(err).length) return;
     // TODO: replace with API call
-    onSubmit({ title: title.trim(), subjectId, courseId, durationMinutes: d, passMark: p });
+    onSubmit({ title: title.trim(), subjectId, durationMinutes: d, passMark: p });
   };
 
   return (
@@ -53,18 +47,10 @@ export default function ExamForm({ initial, onSubmit, onCancel, loading }: ExamF
       <Select
         label="Subject"
         value={subjectId}
-        onChange={(e) => { setSubjectId(e.target.value); setCourseId(""); }}
+        onChange={(e) => setSubjectId(e.target.value)}
         error={errors.subjectId}
         placeholder="Select subject"
         options={adminSubjects.map((s) => ({ value: s.id, label: s.name }))}
-      />
-      <Select
-        label="Course"
-        value={courseId}
-        onChange={(e) => setCourseId(e.target.value)}
-        error={errors.courseId}
-        placeholder="Select course"
-        options={courses.map((c) => ({ value: c.id, label: c.title }))}
       />
       <div className="grid grid-cols-2 gap-3">
         <Input label="Duration (minutes)" type="number" value={duration} onChange={(e) => setDuration(e.target.value)} error={errors.duration} />

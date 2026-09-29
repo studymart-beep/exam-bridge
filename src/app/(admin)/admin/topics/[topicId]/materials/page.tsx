@@ -12,7 +12,7 @@ import MaterialForm from "@/components/admin/MaterialForm";
 import MaterialRow from "@/components/admin/MaterialRow";
 import { getMaterialsByTopicId } from "@/lib/mock/adminMaterials";
 import { adminTopics } from "@/lib/mock/adminTopics";
-import { getAdminCourseById } from "@/lib/mock/adminCourses";
+import { getAdminSubjectById } from "@/lib/mock/adminSubjects";
 import type { Material, MaterialType } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 
@@ -21,7 +21,7 @@ export default function TopicMaterialsPage() {
   const openMenu = useAdminMenu();
   const { showToast } = useToast();
   const topic = adminTopics.find((t) => t.id === topicId);
-  const course = topic ? getAdminCourseById(topic.courseId) : undefined;
+  const subject = topic ? getAdminSubjectById(topic.subjectId) : undefined;
   const [materials, setMaterials] = useState<Material[]>(getMaterialsByTopicId(topicId));
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
@@ -113,7 +113,7 @@ export default function TopicMaterialsPage() {
           <Link href={backHref} className="text-primary hover:underline">
             ← Topics
           </Link>
-          {course && <span> · {course.title}</span>}
+          {subject && <span> · {subject.name}</span>}
           <span> · {topic.title}</span>
         </div>
 

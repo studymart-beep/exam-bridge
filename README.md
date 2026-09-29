@@ -137,6 +137,17 @@ Full admin panel under `/admin/*` (in addition to Phase 1 dashboard):
 Admin entry: `/admin/dashboard`  
 See `ADMIN_PHASE_234_NOTES.md` for the full route/component list.
 
+## v3 — Courses removed, Subject → Topic structure
+
+- **Course layer deleted** everywhere (admin + student)
+- Structure: **Subject → Topic → Materials + optional CBT**
+- Subject **General CBT** (final exam) attachable by admin
+- Student topic URLs: `/subjects/[slug]/topics/[topicId]`
+- Admin can fully **edit exam** metadata + delete exam
+- Settings include **bank details** for subscribe page
+- Subscription UI present but **not enforced**
+- See `COVERAGE_MAP.md` and `V3_CHANGES.md`
+
 ## v2 — Materials & CBT attachment
 
 - **Topic materials** (`/admin/topics/[topicId]/materials`) — video (Cloudflare ID), PDF, image; reorder, edit, delete  

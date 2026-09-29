@@ -15,7 +15,7 @@ export const currentUser: User = {
 
 export const continueLearning: ContinueLearning = {
   topicId: "topic-bio-1",
-  courseId: "course-bio-1",
+  subjectSlug: "biology",
   title: "Cell Structure and Functions",
   subjectName: "Biology",
   level: "SSS 2",

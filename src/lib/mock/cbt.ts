@@ -4,7 +4,7 @@ export const cbtExams: CBTExam[] = [
   {
     id: "cbt-bio-1",
     title: "Cell Structure CBT",
-    courseId: "course-bio-1",
+    subjectId: "subj-bio",
     topicId: "topic-bio-1",
     subjectName: "Biology",
     questionCount: 5,
@@ -84,7 +84,7 @@ export const cbtExams: CBTExam[] = [
   {
     id: "cbt-math-1",
     title: "Linear Equations Practice",
-    courseId: "course-math-1",
+    subjectId: "subj-math",
     topicId: "topic-math-1",
     subjectName: "Mathematics",
     questionCount: 5,
@@ -163,7 +163,7 @@ export const cbtExams: CBTExam[] = [
   {
     id: "cbt-math-2",
     title: "Quadratic Equations CBT",
-    courseId: "course-math-1",
+    subjectId: "subj-math",
     topicId: "topic-math-2",
     subjectName: "Mathematics",
     questionCount: 5,
@@ -241,7 +241,7 @@ export const cbtExams: CBTExam[] = [
   {
     id: "cbt-phy-1",
     title: "Motion & Velocity CBT",
-    courseId: "course-phy-1",
+    subjectId: "subj-phy",
     topicId: "topic-phy-1",
     subjectName: "Physics",
     questionCount: 5,
@@ -318,7 +318,7 @@ export const cbtExams: CBTExam[] = [
   {
     id: "cbt-chem-1",
     title: "Atomic Structure CBT",
-    courseId: "course-chem-1",
+    subjectId: "subj-chem",
     topicId: "topic-chem-1",
     subjectName: "Chemistry",
     questionCount: 5,
@@ -398,6 +398,6 @@ export function getCbtById(id: string): CBTExam | undefined {
   return cbtExams.find((e) => e.id === id);
 }
 
-export function getCbtByCourseId(courseId: string): CBTExam[] {
-  return cbtExams.filter((e) => e.courseId === courseId);
+export function getCbtBySubjectId(subjectId: string): CBTExam[] {
+  return cbtExams.filter((e) => e.subjectId === subjectId);
 }

@@ -124,7 +124,7 @@ export default function AdminSubjectsPage() {
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
         title="Delete subject?"
-        message="This will remove the subject and may affect linked courses."
+        message="This will remove the subject and may affect linked topics."
         confirmLabel="Delete"
         danger
       />

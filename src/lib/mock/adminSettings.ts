@@ -7,4 +7,7 @@ export const defaultPlatformSettings: PlatformSettings = {
   defaultPassMark: 50,
   appName: "Exam Bridge",
   logoUrl: undefined,
+  bankName: "Guaranty Trust Bank",
+  accountName: "Exam Bridge Ltd",
+  accountNumber: "0123456789",
 };

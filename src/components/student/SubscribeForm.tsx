@@ -1,3 +1,6 @@
+// NOTE: Subscription enforcement is intentionally disabled.
+// Activation happens in a later phase.
+
 "use client";
 
 import { useState } from "react";
@@ -5,12 +8,14 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { copyToClipboard } from "@/lib/utils";
+import { defaultPlatformSettings } from "@/lib/mock/adminSettings";
 
 const BANK = {
-  name: "Zenith Bank Plc",
-  accountName: "Exam Bridge Nigeria Limited",
-  accountNumber: "1012345678",
+  name: defaultPlatformSettings.bankName,
+  accountName: defaultPlatformSettings.accountName,
+  accountNumber: defaultPlatformSettings.accountNumber,
   reference: "EB + your phone number",
+  price: defaultPlatformSettings.subscriptionPrice,
 };
 
 export default function SubscribeForm() {
@@ -29,10 +34,7 @@ export default function SubscribeForm() {
   };
 
   const handleSubmit = async () => {
-    if (!file) {
-      showToast("Please upload proof of payment", "warning");
-      return;
-    }
+    // NOTE: upload optional until backend; enforcement disabled
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1000));
     router.push("/subscribe/pending");
@@ -73,7 +75,7 @@ export default function SubscribeForm() {
           </div>
         </div>
         <p className="text-3xl font-heading font-bold text-primary">
-          ₦5,000 <span className="text-base font-medium text-text-secondary">/ month</span>
+          ₦{BANK.price.toLocaleString()} <span className="text-base font-medium text-text-secondary">/ month</span>
         </p>
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-muted">
           <span className="flex items-center gap-1">

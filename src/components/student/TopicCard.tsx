@@ -5,13 +5,13 @@ import Badge from "@/components/ui/Badge";
 
 interface TopicCardProps {
   topic: Topic;
-  courseId: string;
+  subjectSlug: string;
 }
 
-export default function TopicCard({ topic, courseId }: TopicCardProps) {
+export default function TopicCard({ topic, subjectSlug }: TopicCardProps) {
   return (
     <Link
-      href={`/courses/${courseId}/topics/${topic.id}`}
+      href={`/subjects/${subjectSlug}/topics/${topic.id}`}
       className="block p-4 bg-white rounded-2xl border border-gray-100 shadow-soft hover:shadow-card hover:border-gray-200 transition-all duration-200"
     >
       <div className="flex items-start justify-between gap-3">
@@ -23,23 +23,14 @@ export default function TopicCard({ topic, courseId }: TopicCardProps) {
             {topic.description}
           </p>
         </div>
-        {topic.completed && (
-          <Badge variant="success">Done</Badge>
-        )}
+        {topic.completed && <Badge variant="success">Done</Badge>}
       </div>
-
       <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
-        <span className="flex items-center gap-1">
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {topic.duration}
-        </span>
+        <span>{topic.duration}</span>
         {topic.hasVideo && <span>Video</span>}
         {topic.hasPdf && <span>PDF</span>}
         {topic.hasCbt && <span>CBT</span>}
       </div>
-
       <div className="mt-3">
         <ProgressBar value={topic.progress} size="sm" showLabel />
       </div>

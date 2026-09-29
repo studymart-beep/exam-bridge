@@ -23,26 +23,19 @@ export interface Subject {
   bgColor: string;
   topicCount: number;
   description: string;
+  /** Subject-level general CBT exam id */
+  generalCbtId?: string | null;
 }
 
-export interface Course {
+export interface Topic {
   id: string;
   subjectId: string;
   subjectSlug: string;
   title: string;
   description: string;
-  topicCount: number;
-  progress: number;
-  level: string;
-}
-
-export interface Topic {
-  id: string;
-  courseId: string;
-  title: string;
-  description: string;
   progress: number;
   duration: string;
+  order: number;
   hasVideo: boolean;
   hasPdf: boolean;
   hasImages: boolean;
@@ -67,7 +60,7 @@ export interface CBTQuestion {
 export interface CBTExam {
   id: string;
   title: string;
-  courseId: string;
+  subjectId: string;
   topicId?: string;
   subjectName: string;
   questionCount: number;
@@ -112,7 +105,7 @@ export interface ActivityItem {
 
 export interface ContinueLearning {
   topicId: string;
-  courseId: string;
+  subjectSlug: string;
   title: string;
   subjectName: string;
   level: string;
@@ -208,8 +201,6 @@ export interface AdminActivityItem {
   createdAt: string;
 }
 
-/* ── Admin Phase 2–4 types ───────────────────────────────── */
-
 export interface AdminSubject {
   id: string;
   name: string;
@@ -221,23 +212,11 @@ export interface AdminSubject {
   topicCount: number;
   order: number;
   published: boolean;
-}
-
-export interface AdminCourse {
-  id: string;
-  subjectId: string;
-  subjectName: string;
-  title: string;
-  description: string;
-  level: string;
-  topicCount: number;
-  published: boolean;
-  order: number;
+  generalCbtId?: string | null;
 }
 
 export interface AdminTopic {
   id: string;
-  courseId: string;
   subjectId: string;
   title: string;
   description: string;
@@ -254,8 +233,6 @@ export interface AdminCbtExam {
   title: string;
   subjectId: string;
   subjectName: string;
-  courseId: string;
-  courseName: string;
   questionCount: number;
   durationMinutes: number;
   passMark: number;
@@ -292,9 +269,10 @@ export interface PlatformSettings {
   defaultPassMark: number;
   appName: string;
   logoUrl?: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
 }
-
-/* ── Admin v2 — Materials & CBT attachment ───────────────── */
 
 export type MaterialType = "video" | "pdf" | "image";
 
@@ -303,7 +281,6 @@ export interface Material {
   topicId: string;
   type: MaterialType;
   title: string;
-  /** Cloudflare Stream video ID, or filename for pdf/image */
   source: string;
   orderIndex: number;
   createdAt: string;
@@ -314,7 +291,7 @@ export interface TopicCbtLink {
   cbtExamId: string | null;
 }
 
-export interface CourseCbtLink {
-  courseId: string;
+export interface SubjectCbtLink {
+  subjectId: string;
   cbtExamId: string | null;
 }

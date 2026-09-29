@@ -11,9 +11,13 @@ import DataTable, { type Column } from "@/components/admin/DataTable";
 import { adminPayments } from "@/lib/mock/adminPayments";
 import { formatDate } from "@/lib/utils";
 import type { Payment } from "@/types";
+import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AdminPaymentsPage() {
   const openMenu = useAdminMenu();
+  const { showToast } = useToast();
+  const notifyPending = () => showToast("Payment verification will be enabled after backend integration.", "info");
 
   const verified = adminPayments.filter((p) => p.status === "verified");
   const revenue = verified.reduce((sum, p) => sum + p.amount, 0);
@@ -67,6 +71,16 @@ export default function AdminPaymentsPage() {
       render: () => (
         <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[10px] text-text-muted">
           img
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: () => (
+        <div className="flex gap-2">
+          <button type="button" onClick={notifyPending} className="text-xs font-medium text-success hover:underline">Approve</button>
+          <button type="button" onClick={notifyPending} className="text-xs font-medium text-error hover:underline">Reject</button>
         </div>
       ),
     },

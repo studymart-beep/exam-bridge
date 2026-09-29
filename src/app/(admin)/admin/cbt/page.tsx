@@ -12,7 +12,6 @@ import DataTable, { type Column } from "@/components/admin/DataTable";
 import ExamForm from "@/components/admin/forms/ExamForm";
 import { adminCbtExams as initial } from "@/lib/mock/adminCbtExams";
 import { adminSubjects } from "@/lib/mock/adminSubjects";
-import { adminCourses } from "@/lib/mock/adminCourses";
 import type { AdminCbtExam } from "@/types";
 import { useToast } from "@/components/ui/Toast";
 
@@ -25,21 +24,17 @@ export default function AdminCbtPage() {
   const handleCreate = (data: {
     title: string;
     subjectId: string;
-    courseId: string;
     durationMinutes: number;
     passMark: number;
   }) => {
     // TODO: replace with API call
     const subj = adminSubjects.find((s) => s.id === data.subjectId);
-    const course = adminCourses.find((c) => c.id === data.courseId);
     setExams((prev) => [
       {
         id: `cbt-${Date.now()}`,
         title: data.title,
         subjectId: data.subjectId,
         subjectName: subj?.name || "",
-        courseId: data.courseId,
-        courseName: course?.title || "",
         questionCount: 0,
         durationMinutes: data.durationMinutes,
         passMark: data.passMark,

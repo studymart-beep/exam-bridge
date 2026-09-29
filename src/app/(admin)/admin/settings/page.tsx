@@ -16,6 +16,9 @@ export default function AdminSettingsPage() {
   const [duration, setDuration] = useState(String(defaultPlatformSettings.defaultExamDuration));
   const [passMark, setPassMark] = useState(String(defaultPlatformSettings.defaultPassMark));
   const [appName, setAppName] = useState(defaultPlatformSettings.appName);
+  const [bankName, setBankName] = useState(defaultPlatformSettings.bankName);
+  const [accountName, setAccountName] = useState(defaultPlatformSettings.accountName);
+  const [accountNumber, setAccountNumber] = useState(defaultPlatformSettings.accountNumber);
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -33,29 +36,22 @@ export default function AdminSettingsPage() {
         <Card className="space-y-4">
           <h3 className="font-heading font-semibold text-text-primary">Subscription</h3>
           {/* TODO: persist to backend */}
-          <Input
-            label="Monthly price (₦)"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
+          <Input label="Monthly price (₦)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+        </Card>
+
+        <Card className="space-y-4">
+          <h3 className="font-heading font-semibold text-text-primary">Payment bank details</h3>
+          {/* TODO: persist to backend */}
+          <Input label="Bank name" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+          <Input label="Account name" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
+          <Input label="Account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
         </Card>
 
         <Card className="space-y-4">
           <h3 className="font-heading font-semibold text-text-primary">Exam defaults</h3>
           {/* TODO: persist to backend */}
-          <Input
-            label="Default duration (minutes)"
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-          />
-          <Input
-            label="Default pass mark (%)"
-            type="number"
-            value={passMark}
-            onChange={(e) => setPassMark(e.target.value)}
-          />
+          <Input label="Default duration (minutes)" type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+          <Input label="Default pass mark (%)" type="number" value={passMark} onChange={(e) => setPassMark(e.target.value)} />
         </Card>
 
         <Card className="space-y-4">
