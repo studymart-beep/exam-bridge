@@ -137,6 +137,14 @@ Full admin panel under `/admin/*` (in addition to Phase 1 dashboard):
 Admin entry: `/admin/dashboard`  
 See `ADMIN_PHASE_234_NOTES.md` for the full route/component list.
 
+## v2 — Materials & CBT attachment
+
+- **Topic materials** (`/admin/topics/[topicId]/materials`) — video (Cloudflare ID), PDF, image; reorder, edit, delete  
+- **Topic CBT** (`/admin/topics/[topicId]/cbt`) — attach / create / detach exam  
+- **Course general CBT** (`/admin/courses/[courseId]/cbt`) — final exam for the course  
+- Student: “Take CBT” on topics; “Take General CBT” locked until all topics complete  
+- Uploads disabled until backend; see `ADMIN_V2_NOTES.md`
+
 ## Notes
 
 - No external UI libraries (no shadcn, MUI, etc.)

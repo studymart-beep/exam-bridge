@@ -293,3 +293,28 @@ export interface PlatformSettings {
   appName: string;
   logoUrl?: string;
 }
+
+/* ── Admin v2 — Materials & CBT attachment ───────────────── */
+
+export type MaterialType = "video" | "pdf" | "image";
+
+export interface Material {
+  id: string;
+  topicId: string;
+  type: MaterialType;
+  title: string;
+  /** Cloudflare Stream video ID, or filename for pdf/image */
+  source: string;
+  orderIndex: number;
+  createdAt: string;
+}
+
+export interface TopicCbtLink {
+  topicId: string;
+  cbtExamId: string | null;
+}
+
+export interface CourseCbtLink {
+  courseId: string;
+  cbtExamId: string | null;
+}

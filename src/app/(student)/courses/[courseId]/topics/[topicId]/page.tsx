@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import StudentHeader from "@/components/student/StudentHeader";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -41,6 +42,15 @@ export default async function TopicDetailPage({ params }: Props) {
         </div>
 
         <TopicDetailClient topic={topic} courseId={courseId} />
+
+        {topic.hasCbt && topic.cbtId && (
+          <Link
+            href={`/cbt/${topic.cbtId}`}
+            className="flex items-center justify-center w-full h-12 rounded-2xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors"
+          >
+            Take CBT
+          </Link>
+        )}
       </div>
     </div>
   );

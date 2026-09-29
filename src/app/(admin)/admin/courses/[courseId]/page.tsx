@@ -79,12 +79,15 @@ export default function AdminCourseDetailPage() {
         <Link href="/admin/courses" className="text-sm text-primary hover:underline">← Back to courses</Link>
         <Card>
           <p className="text-sm text-text-secondary">{course.description}</p>
-          <div className="mt-2 flex gap-2 flex-wrap">
+          <div className="mt-2 flex gap-2 flex-wrap items-center">
             <Badge variant="info">{course.level}</Badge>
             <Badge variant={course.published ? "success" : "default"}>
               {course.published ? "Published" : "Draft"}
             </Badge>
             <span className="text-xs text-text-muted self-center">{topics.length} topics</span>
+            <Link href={`/admin/courses/${courseId}/cbt`} className="ml-auto">
+              <Button size="sm" variant="outline">Manage course CBT</Button>
+            </Link>
           </div>
         </Card>
 
@@ -104,6 +107,9 @@ export default function AdminCourseDetailPage() {
                 <p className="text-sm font-medium text-text-primary">{t.order}. {t.title}</p>
                 <p className="text-xs text-text-muted">{t.duration}</p>
               </div>
+              <Link href={`/admin/topics/${t.id}/materials`}>
+                <Button size="sm" variant="outline">Manage content</Button>
+              </Link>
               <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setModal(true); }}>Edit</Button>
             </Card>
           ))}

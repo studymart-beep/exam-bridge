@@ -6,6 +6,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import { getCourseById } from "@/lib/mock/courses";
 import { getTopicsByCourseId } from "@/lib/mock/topics";
 import { getSubjectBySlug } from "@/lib/mock/subjects";
+import { getCourseCbtExamId } from "@/lib/mock/adminCourseCbt";
 
 interface Props {
   params: Promise<{ courseId: string }>;
@@ -18,6 +19,9 @@ export default async function CourseDetailPage({ params }: Props) {
 
   const subject = getSubjectBySlug(course.subjectSlug);
   const topics = getTopicsByCourseId(courseId);
+  const courseCbtId = getCourseCbtExamId(courseId);
+  const allTopicsComplete =
+    topics.length > 0 && topics.every((t) => t.completed);
 
   return (
     <div>
@@ -49,11 +53,17 @@ export default async function CourseDetailPage({ params }: Props) {
           </h3>
           <div className="space-y-3">
             {topics.map((topic) => (
-              <TopicCard
-                key={topic.id}
-                topic={topic}
-                courseId={courseId}
-              />
+              <div key={topic.id} className="space-y-2">
+                <TopicCard topic={topic} courseId={courseId} />
+                {topic.hasCbt && topic.cbtId && (
+                  <Link
+                    href={`/cbt/${topic.cbtId}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline px-1"
+                  >
+                    Take CBT →
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
           {topics.length === 0 && (
@@ -62,6 +72,33 @@ export default async function CourseDetailPage({ params }: Props) {
             </p>
           )}
         </div>
+
+        {courseCbtId && (
+          <div className="pt-2">
+            {allTopicsComplete ? (
+              <Link
+                href={`/cbt/${courseCbtId}`}
+                className="flex items-center justify-center w-full h-12 rounded-2xl bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors"
+              >
+                Take General CBT
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                title="Complete all topics to unlock"
+                className="flex items-center justify-center w-full h-12 rounded-2xl bg-gray-200 text-text-muted font-semibold text-sm cursor-not-allowed"
+              >
+                Take General CBT
+              </button>
+            )}
+            {!allTopicsComplete && (
+              <p className="text-xs text-text-muted text-center mt-2">
+                Complete all topics to unlock
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -85,7 +85,10 @@ export default function AdminSubjectTopicsPage() {
               </div>
               <p className="text-xs text-text-muted mt-0.5">{t.duration} · {t.description}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Link href={`/admin/topics/${t.id}/materials`}>
+                <Button size="sm" variant="outline">Manage content</Button>
+              </Link>
               <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setModal(true); }}>Edit</Button>
               <Button size="sm" variant="ghost" className="text-error" onClick={() => setDeleteId(t.id)}>Delete</Button>
             </div>
