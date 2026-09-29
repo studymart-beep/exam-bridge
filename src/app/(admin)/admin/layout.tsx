@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { createContext, useContext, useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
