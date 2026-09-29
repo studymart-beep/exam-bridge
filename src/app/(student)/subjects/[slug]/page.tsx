@@ -4,6 +4,7 @@ import StudentHeader from "@/components/student/StudentHeader";
 import TopicCard from "@/components/student/TopicCard";
 import { getSubjectBySlug } from "@/lib/mock/subjects";
 import { getTopicsBySubjectSlug } from "@/lib/mock/topics";
+import PageLock from "@/components/student/PageLock";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,7 +20,7 @@ export default async function SubjectDetailPage({ params }: Props) {
   return (
     <div>
       <StudentHeader title={subject.name} showBack backHref="/subjects" />
-
+      <PageLock label="Subscribe to unlock this subject.">
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
         <div className="flex items-center gap-4">
           <div
@@ -73,6 +74,7 @@ export default async function SubjectDetailPage({ params }: Props) {
           </Link>
         )}
       </div>
+      </PageLock>
     </div>
   );
 }

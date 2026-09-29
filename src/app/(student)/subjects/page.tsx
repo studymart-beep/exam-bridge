@@ -5,6 +5,7 @@ import StudentHeader from "@/components/student/StudentHeader";
 import SubjectCard from "@/components/student/SubjectCard";
 import { subjects } from "@/lib/mock/subjects";
 import { cn } from "@/lib/utils";
+import PageLock from "@/components/student/PageLock";
 
 const filters = ["All", "Science", "Arts", "Commercial", "Core"];
 
@@ -32,7 +33,7 @@ export default function SubjectsPage() {
   return (
     <div>
       <StudentHeader title="Subjects" />
-
+      <PageLock label="Subscribe to unlock all subjects.">
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
         <div>
           <h2 className="text-xl font-heading font-bold text-text-primary">
@@ -96,6 +97,7 @@ export default function SubjectsPage() {
           </div>
         )}
       </div>
+      </PageLock>
     </div>
   );
 }

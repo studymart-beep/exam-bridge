@@ -5,6 +5,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import TopicDetailClient from "@/components/student/TopicDetailClient";
 import { getTopicById } from "@/lib/mock/topics";
 import { getSubjectBySlug } from "@/lib/mock/subjects";
+import PageLock from "@/components/student/PageLock";
 
 interface Props {
   params: Promise<{ slug: string; topicId: string }>;
@@ -24,7 +25,7 @@ export default async function TopicDetailPage({ params }: Props) {
         showBack
         backHref={`/subjects/${slug}`}
       />
-
+      <PageLock label="Subscribe to access this topic.">
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
         <div>
           <p className="text-sm text-text-muted">
@@ -52,6 +53,7 @@ export default async function TopicDetailPage({ params }: Props) {
           </Link>
         )}
       </div>
+      </PageLock>
     </div>
   );
 }

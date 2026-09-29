@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";
@@ -5,6 +7,8 @@ import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { currentUser, continueLearning, recentActivity } from "@/lib/mock/user";
 import { notifications } from "@/lib/mock/notifications";
+import DashboardGated, { LockedChip } from "@/components/student/DashboardGated";
+import { useSubscription } from "@/lib/subscription/context";
 
 const quickTiles = [
   {
@@ -79,7 +83,7 @@ export default function DashboardPage() {
   return (
     <div>
       <StudentHeader title="Home" />
-
+      <DashboardGated>
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
         {/* Welcome */}
         <div>
@@ -96,20 +100,6 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
-
-
-        {/* NOTE: Subscription enforcement is intentionally disabled. */}
-        {currentUser.subscription.status !== "active" && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-800">Your subscription is inactive</p>
-              <p className="text-xs text-amber-700 mt-0.5">Subscribe to unlock full access. You can still browse all content for now.</p>
-            </div>
-            <Link href="/subscribe" className="inline-flex items-center justify-center h-10 px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-hover">
-              Subscribe
-            </Link>
-          </div>
-        )}
 
         {/* Continue Learning */}
         <Card>
@@ -160,8 +150,9 @@ export default function DashboardPage() {
             <Link
               key={tile.href}
               href={tile.href}
-              className="flex flex-col items-start p-4 bg-white rounded-2xl border border-gray-100 shadow-soft hover:shadow-card hover:border-gray-200 transition-all duration-200"
+              className="relative flex flex-col items-start p-4 bg-white rounded-2xl border border-gray-100 shadow-soft hover:shadow-card hover:border-gray-200 transition-all duration-200"
             >
+              <DashboardTileChip href={tile.href} />
               <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center mb-3">
                 {tile.icon}
               </div>
@@ -222,6 +213,14 @@ export default function DashboardPage() {
           </Link>
         )}
       </div>
+      </DashboardGated>
     </div>
   );
+}
+
+
+function DashboardTileChip({ href }: { href: string }) {
+  const { isSubscribed } = useSubscription();
+  const locked = !isSubscribed && ["/subjects", "/cbt", "/results", "/progress"].includes(href);
+  return <LockedChip show={locked} />;
 }

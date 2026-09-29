@@ -1,3 +1,7 @@
+// NOTE: This is the subscription flow. In testing mode, subscription
+// does not yet enforce access via payment backend.
+// NOTE: enforcement activates after backend integration
+
 import Link from "next/link";
 import SubscribeForm from "@/components/student/SubscribeForm";
 

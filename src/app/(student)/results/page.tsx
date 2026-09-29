@@ -3,12 +3,13 @@ import StudentHeader from "@/components/student/StudentHeader";
 import Badge from "@/components/ui/Badge";
 import { pastResults } from "@/lib/mock/results";
 import { formatDate } from "@/lib/utils";
+import PageLock from "@/components/student/PageLock";
 
 export default function ResultsPage() {
   return (
     <div>
       <StudentHeader title="Results" />
-
+      <PageLock label="Subscribe to view your results.">
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
         <div>
           <h2 className="text-xl font-heading font-bold text-text-primary">
@@ -63,6 +64,7 @@ export default function ResultsPage() {
           </div>
         )}
       </div>
+      </PageLock>
     </div>
   );
 }

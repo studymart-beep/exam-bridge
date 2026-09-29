@@ -137,6 +137,15 @@ Full admin panel under `/admin/*` (in addition to Phase 1 dashboard):
 Admin entry: `/admin/dashboard`  
 See `ADMIN_PHASE_234_NOTES.md` for the full route/component list.
 
+## v4 — frontend subscription gating (mock)
+
+- Floating **Subscribed: ON/OFF** toggle (bottom-right)
+- State stored in `localStorage` (default OFF)
+- Locked: subjects, topics, CBT, progress, results
+- Dashboard stays open with banner + dimmed tiles
+- Profile, settings, notifications stay free
+- See `V4_CHANGES.md`
+
 ## v3 — Courses removed, Subject → Topic structure
 
 - **Course layer deleted** everywhere (admin + student)
