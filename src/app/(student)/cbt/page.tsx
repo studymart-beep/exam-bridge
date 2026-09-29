@@ -1,30 +1,35 @@
+import Link from "next/link";
 import StudentHeader from "@/components/student/StudentHeader";
-import CBTCard from "@/components/student/CBTCard";
-import { cbtExams } from "@/lib/mock/cbt";
-import PageLock from "@/components/student/PageLock";
+import Card from "@/components/ui/Card";
+import { getExams } from "@/lib/data/cbt";
 
-export default function CBTListPage() {
+export default async function CBTListPage() {
+  const exams = await getExams();
+
   return (
     <div>
       <StudentHeader title="CBT Practice" />
-      <PageLock label="Subscribe to access CBT practice.">
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
         <div>
-          <h2 className="text-xl font-heading font-bold text-text-primary">
-            CBT Practice
-          </h2>
-          <p className="text-sm text-text-secondary">
-            Practice real exam questions in CBT mode
-          </p>
+          <h2 className="text-xl font-heading font-bold text-text-primary">CBT Practice</h2>
+          <p className="text-sm text-text-secondary">Practice real exam questions</p>
         </div>
-
         <div className="space-y-3">
-          {cbtExams.map((exam) => (
-            <CBTCard key={exam.id} exam={exam} />
+          {exams.map((exam) => (
+            <Link key={exam.id} href={`/cbt/${exam.id}`}>
+              <Card className="hover:shadow-card transition-shadow">
+                <h3 className="font-heading font-semibold text-text-primary">{exam.title}</h3>
+                <p className="text-xs text-text-muted mt-1">
+                  {exam.question_count} Q · {exam.duration_mins} min · Pass {exam.pass_mark}%
+                </p>
+              </Card>
+            </Link>
           ))}
+          {exams.length === 0 && (
+            <p className="text-center text-text-muted text-sm py-12">No exams yet.</p>
+          )}
         </div>
       </div>
-      </PageLock>
     </div>
   );
 }

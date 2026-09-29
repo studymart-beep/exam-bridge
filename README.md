@@ -137,6 +137,15 @@ Full admin panel under `/admin/*` (in addition to Phase 1 dashboard):
 Admin entry: `/admin/dashboard`  
 See `ADMIN_PHASE_234_NOTES.md` for the full route/component list.
 
+## v5 — Supabase backend
+
+- Real Auth (student register/login, admin login only)
+- PostgreSQL schema in `schema.sql` + RLS
+- Middleware protects /admin/* and student routes
+- Content-level subscription lock
+- Payment receipt upload + admin approve
+- See SETUP_GUIDE.md and V5_CHANGES.md
+
 ## v4 — frontend subscription gating (mock)
 
 - Floating **Subscribed: ON/OFF** toggle (bottom-right)

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { ToastProvider } from "@/components/ui/Toast";
-import { SubscriptionProvider } from "@/lib/subscription/context";
-import SubscriptionToggle from "@/components/dev/SubscriptionToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,12 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <SubscriptionProvider>
-          <ToastProvider>
-            {children}
-            <SubscriptionToggle />
-          </ToastProvider>
-        </SubscriptionProvider>
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );
