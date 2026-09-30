@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import StudentHeader from "@/components/student/StudentHeader";
-import Card from "@/components/ui/Card";
 import ContentLock from "@/components/student/ContentLock";
+import MaterialsViewer from "@/components/student/MaterialsViewer";
 import { getSubjectBySlug } from "@/lib/data/student/subjects";
 import { getTopicById } from "@/lib/data/subjects";
 import { listMaterialsByTopic } from "@/lib/data/student/materials";
@@ -57,17 +57,7 @@ export default async function TopicDetailPage({ params }: Props) {
           {materials.length === 0 ? (
             <p className="text-sm text-text-muted p-4">No materials for this topic yet.</p>
           ) : (
-            <div className="space-y-3 p-2">
-              {materials.map((m) => (
-                <Card key={m.id} padding="sm">
-                  <p className="text-xs uppercase text-text-muted">{m.type}</p>
-                  <p className="font-medium text-sm">{m.title}</p>
-                  {m.source && (
-                    <p className="text-xs text-primary mt-1 break-all">{m.source}</p>
-                  )}
-                </Card>
-              ))}
-            </div>
+            <MaterialsViewer topicId={topicId} materials={materials} />
           )}
         </ContentLock>
 
