@@ -33,49 +33,85 @@ export type DbMaterial = {
   order_index: number;
 };
 
+function hasSupabaseEnv(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 export async function getSubjects(): Promise<DbSubject[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("subjects")
-    .select("*")
-    .eq("is_active", true)
-    .order("order_index");
-  return (data as DbSubject[]) || [];
+  if (!hasSupabaseEnv()) return [];
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("subjects")
+      .select("*")
+      .eq("is_active", true)
+      .order("order_index");
+    return (data as DbSubject[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getSubjectBySlug(slug: string): Promise<DbSubject | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("subjects")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-  return (data as DbSubject) || null;
+  if (!hasSupabaseEnv()) return null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("subjects")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+    return (data as DbSubject) || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getTopicsBySubjectId(subjectId: string): Promise<DbTopic[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("topics")
-    .select("*")
-    .eq("subject_id", subjectId)
-    .eq("is_published", true)
-    .order("order_index");
-  return (data as DbTopic[]) || [];
+  if (!hasSupabaseEnv()) return [];
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("topics")
+      .select("*")
+      .eq("subject_id", subjectId)
+      .eq("is_published", true)
+      .order("order_index");
+    return (data as DbTopic[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getTopicById(id: string): Promise<DbTopic | null> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("topics").select("*").eq("id", id).maybeSingle();
-  return (data as DbTopic) || null;
+  if (!hasSupabaseEnv()) return null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("topics")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    return (data as DbTopic) || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getMaterialsByTopicId(topicId: string): Promise<DbMaterial[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("materials")
-    .select("*")
-    .eq("topic_id", topicId)
-    .order("order_index");
-  return (data as DbMaterial[]) || [];
+  if (!hasSupabaseEnv()) return [];
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("materials")
+      .select("*")
+      .eq("topic_id", topicId)
+      .order("order_index");
+    return (data as DbMaterial[]) || [];
+  } catch {
+    return [];
+  }
 }

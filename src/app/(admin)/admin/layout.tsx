@@ -16,10 +16,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Login page: no admin chrome (hooks must run before any return)
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <AdminMenuContext.Provider value={() => setSidebarOpen(true)}>

@@ -29,34 +29,65 @@ export type DbOption = {
   is_correct: boolean;
 };
 
+function hasEnv(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 export async function getExams(): Promise<DbExam[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("cbt_exams")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
-  return (data as DbExam[]) || [];
+  if (!hasEnv()) return [];
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("cbt_exams")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    return (data as DbExam[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getExamById(id: string): Promise<DbExam | null> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("cbt_exams").select("*").eq("id", id).maybeSingle();
-  return (data as DbExam) || null;
+  if (!hasEnv()) return null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("cbt_exams")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    return (data as DbExam) || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getQuestionsWithOptions(examId: string) {
-  const supabase = await createClient();
-  const { data: questions } = await supabase
-    .from("cbt_questions")
-    .select("*")
-    .eq("exam_id", examId)
-    .order("order_index");
-  if (!questions?.length) return [];
-  const ids = questions.map((q: { id: string }) => q.id);
-  const { data: options } = await supabase.from("cbt_options").select("*").in("question_id", ids);
-  return (questions as DbQuestion[]).map((q) => ({
-    ...q,
-    options: ((options as DbOption[]) || []).filter((o) => o.question_id === q.id),
-  }));
+  if (!hasEnv()) return [];
+  try {
+    const supabase = await createClient();
+    const { data: questions } = await supabase
+      .from("cbt_questions")
+      .select("*")
+      .eq("exam_id", examId)
+      .order("order_index");
+    if (!questions?.length) return [];
+    const ids = questions.map((q: { id: string }) => q.id);
+    const { data: options } = await supabase
+      .from("cbt_options")
+      .select("*")
+      .in("question_id", ids);
+    return (questions as DbQuestion[]).map((q) => ({
+      ...q,
+      options: ((options as DbOption[]) || []).filter(
+        (o) => o.question_id === q.id
+      ),
+    }));
+  } catch {
+    return [];
+  }
 }

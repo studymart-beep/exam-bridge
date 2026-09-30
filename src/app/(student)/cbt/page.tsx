@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";

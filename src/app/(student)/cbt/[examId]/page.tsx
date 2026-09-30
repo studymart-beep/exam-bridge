@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import StudentHeader from "@/components/student/StudentHeader";
 import ContentLock from "@/components/student/ContentLock";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // NOTE: enforcement activates after backend integration / admin approval
 
 import Link from "next/link";

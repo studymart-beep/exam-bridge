@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import StudentHeader from "@/components/student/StudentHeader";
 import SubjectCard from "@/components/student/SubjectCard";
 import { getSubjects } from "@/lib/data/subjects";
