@@ -1,154 +1,88 @@
-"use client";
-
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { useAdminMenu } from "../../layout";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import Avatar from "@/components/ui/Avatar";
-import Button from "@/components/ui/Button";
-import ConfirmDialog from "@/components/admin/ConfirmDialog";
-import { getAdminUserById } from "@/lib/mock/adminUsers";
-import { adminPayments } from "@/lib/mock/adminPayments";
-import { pastResults } from "@/lib/mock/results";
-import { formatDate, formatDateTime } from "@/lib/utils";
-import { useToast } from "@/components/ui/Toast";
+import {
+  adminGetStudent,
+  adminGetStudentPayments,
+  adminGetStudentAttempts,
+} from "@/lib/data/admin/users";
+import UserActions from "@/components/admin/UserActions";
 
-export default function AdminUserDetailPage() {
-  const { userId } = useParams<{ userId: string }>();
-  const openMenu = useAdminMenu();
-  const router = useRouter();
-  const { showToast } = useToast();
-  const user = getAdminUserById(userId);
-  const [confirm, setConfirm] = useState<"suspend" | "activate" | "delete" | null>(null);
+export const dynamic = "force-dynamic";
 
-  if (!user) {
-    return (
-      <div>
-        <AdminHeader title="User not found" onMenuClick={openMenu} />
-        <div className="p-6 text-center">
-          <p className="text-text-muted">Student not found.</p>
-          <Link href="/admin/users" className="text-primary text-sm mt-2 inline-block">Back to students</Link>
-        </div>
-      </div>
-    );
-  }
+interface Props {
+  params: Promise<{ userId: string }>;
+}
 
-  const payments = adminPayments.filter((p) => p.userId === user.id);
-  const attempts = pastResults.slice(0, 3);
+export default async function AdminUserDetailPage({ params }: Props) {
+  const { userId } = await params;
+  const student = await adminGetStudent(userId);
+  if (!student || student.role !== "student") notFound();
 
-  const handleAction = () => {
-    // TODO: replace with API call
-    if (confirm === "delete") {
-      showToast("User deleted (mock)", "success");
-      router.push("/admin/users");
-    } else if (confirm === "suspend") {
-      showToast("User suspended (mock)", "warning");
-    } else {
-      showToast("User activated (mock)", "success");
-    }
-    setConfirm(null);
-  };
+  const payments = await adminGetStudentPayments(userId);
+  const attempts = await adminGetStudentAttempts(userId);
 
   return (
     <div>
-      <AdminHeader title={user.fullName} subtitle="Student detail" onMenuClick={openMenu} />
+      <AdminHeader title={student.full_name || "Student"} subtitle={student.email || ""} />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
-        <Card className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-          <Avatar initials={user.initials} size="xl" />
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-heading font-bold text-text-primary">{user.fullName}</h2>
-            <p className="text-sm text-text-secondary">{user.email}</p>
-            <p className="text-sm text-text-muted">{user.phone}</p>
-            <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
-              <Badge variant={user.status === "active" ? "success" : user.status === "suspended" ? "error" : "warning"}>
-                {user.status}
-              </Badge>
-              <Badge variant="info">{user.subscriptionStatus}</Badge>
-            </div>
+        <Link href="/admin/users" className="text-sm text-primary hover:underline">
+          ← Back to students
+        </Link>
+        <Card className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Badge variant={student.status === "active" ? "success" : "warning"}>{student.status}</Badge>
           </div>
+          <p className="text-sm"><span className="text-text-muted">Phone:</span> {student.phone || "—"}</p>
+          <p className="text-sm">
+            <span className="text-text-muted">Subscription expires:</span>{" "}
+            {student.subscription_expires_at
+              ? new Date(student.subscription_expires_at).toLocaleDateString()
+              : "—"}
+          </p>
+          <p className="text-sm">
+            <span className="text-text-muted">Joined:</span>{" "}
+            {new Date(student.created_at).toLocaleDateString()}
+          </p>
+          <UserActions userId={student.id} status={student.status} />
         </Card>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Joined", value: formatDate(user.joinedAt) },
-            { label: "Last active", value: formatDate(user.lastActiveAt) },
-            { label: "Exams taken", value: String(user.examsTaken) },
-            { label: "Avg score", value: `${user.avgScore}%` },
-          ].map((s) => (
-            <Card key={s.label} padding="sm" className="text-center">
-              <p className="text-xs text-text-muted">{s.label}</p>
-              <p className="text-sm font-semibold text-text-primary mt-0.5">{s.value}</p>
-            </Card>
-          ))}
-        </div>
-
         <Card>
-          <h3 className="font-heading font-semibold text-text-primary mb-3">Payment history</h3>
+          <h3 className="font-heading font-semibold mb-3">Payments</h3>
           {payments.length === 0 ? (
-            <p className="text-sm text-text-muted">No payments</p>
+            <p className="text-sm text-text-muted">No payments.</p>
           ) : (
-            <div className="space-y-2">
-              {payments.map((p) => (
-                <div key={p.id} className="flex items-center justify-between text-sm py-2 border-b border-gray-50 last:border-0">
-                  <div>
-                    <p className="font-medium">₦{p.amount.toLocaleString()}</p>
-                    <p className="text-xs text-text-muted">{formatDateTime(p.createdAt)}</p>
-                  </div>
-                  <Badge variant={p.status === "verified" ? "success" : p.status === "pending" ? "warning" : "error"}>
-                    {p.status}
-                  </Badge>
-                </div>
+            <ul className="space-y-2 text-sm">
+              {payments.map((p: { id: string; amount: number; status: string; created_at: string }) => (
+                <li key={p.id} className="flex justify-between">
+                  <span>₦{Number(p.amount).toLocaleString()} · {p.status}</span>
+                  <span className="text-text-muted text-xs">{new Date(p.created_at).toLocaleDateString()}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </Card>
 
         <Card>
-          <h3 className="font-heading font-semibold text-text-primary mb-3">Recent CBT attempts</h3>
-          <div className="space-y-2">
-            {attempts.map((a) => (
-              <div key={a.id} className="flex items-center justify-between text-sm py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <p className="font-medium">{a.examTitle}</p>
-                  <p className="text-xs text-text-muted">{a.subjectName}</p>
-                </div>
-                <Badge variant={a.passed ? "success" : "error"}>{a.score}%</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <div className="flex flex-wrap gap-3">
-          {user.status === "suspended" ? (
-            <Button onClick={() => setConfirm("activate")}>Activate</Button>
+          <h3 className="font-heading font-semibold mb-3">CBT attempts</h3>
+          {attempts.length === 0 ? (
+            <p className="text-sm text-text-muted">No attempts.</p>
           ) : (
-            <Button variant="outline" onClick={() => setConfirm("suspend")}>Suspend</Button>
+            <ul className="space-y-2 text-sm">
+              {attempts.map((a: { id: string; score: number | null; total: number | null; status: string; cbt_exams?: { title: string } | null }) => (
+                <li key={a.id} className="flex justify-between">
+                  <span>{a.cbt_exams?.title || "Exam"} · {a.status}</span>
+                  <span className="text-text-muted">
+                    {a.score != null ? `${a.score}/${a.total}` : "—"}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
-          <Button variant="danger" onClick={() => setConfirm("delete")}>Delete</Button>
-          <Link href="/admin/users">
-            <Button variant="ghost">Back</Button>
-          </Link>
-        </div>
+        </Card>
       </div>
-
-      <ConfirmDialog
-        open={confirm !== null}
-        onClose={() => setConfirm(null)}
-        onConfirm={handleAction}
-        title={confirm === "delete" ? "Delete user?" : confirm === "suspend" ? "Suspend user?" : "Activate user?"}
-        message={
-          confirm === "delete"
-            ? `Permanently delete ${user.fullName}? This cannot be undone.`
-            : confirm === "suspend"
-            ? `Suspend ${user.fullName}? They will lose access.`
-            : `Re-activate ${user.fullName}?`
-        }
-        confirmLabel={confirm === "delete" ? "Delete" : confirm === "suspend" ? "Suspend" : "Activate"}
-        danger={confirm === "delete" || confirm === "suspend"}
-      />
     </div>
   );
 }
