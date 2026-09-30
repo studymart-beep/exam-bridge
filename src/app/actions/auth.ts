@@ -85,3 +85,9 @@ export async function signOutAdmin(): Promise<void> {
   await supabase.auth.signOut();
   redirect("/admin/login");
 }
+
+export async function logout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
