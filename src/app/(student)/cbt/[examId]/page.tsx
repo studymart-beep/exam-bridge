@@ -1,47 +1,45 @@
-export const dynamic = "force-dynamic";
-
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import StudentHeader from "@/components/student/StudentHeader";
-import ContentLock from "@/components/student/ContentLock";
 import Card from "@/components/ui/Card";
-import { getExamById } from "@/lib/data/cbt";
+import ContentLock from "@/components/student/ContentLock";
+import { getExamById } from "@/lib/data/student/cbt";
+import { getCurrentProfile } from "@/lib/data/student/profile";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ examId: string }>;
 }
 
-export default async function CBTExamPage({ params }: Props) {
+export default async function CbtExamPage({ params }: Props) {
   const { examId } = await params;
   const exam = await getExamById(examId);
   if (!exam) notFound();
+  const profile = await getCurrentProfile();
 
   return (
     <div>
-      <StudentHeader title="CBT Exam" showBack backHref="/cbt" />
-      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
-        <Card>
-          <h2 className="text-xl font-heading font-bold text-text-primary">{exam.title}</h2>
-          <dl className="mt-3 grid grid-cols-3 gap-3 text-sm">
-            <div>
-              <dt className="text-xs text-text-muted">Questions</dt>
-              <dd className="font-medium">{exam.question_count}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-text-muted">Duration</dt>
-              <dd className="font-medium">{exam.duration_mins} min</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-text-muted">Pass mark</dt>
-              <dd className="font-medium">{exam.pass_mark}%</dd>
-            </div>
-          </dl>
-        </Card>
-
-        <ContentLock label="Subscribe to take this exam.">
-          <p className="text-sm text-text-secondary text-center py-6">
-            Exam player will load here once questions are available.
-            {/* TODO: wire attempt start + CBTExamClient with DB questions */}
+      <StudentHeader
+        title={exam.title}
+        showBack
+        backHref="/cbt"
+        userName={profile?.full_name || "Student"}
+      />
+      <div className="px-4 sm:px-6 py-5 max-w-lg mx-auto space-y-4">
+        <Card className="space-y-2">
+          <p className="text-sm text-text-secondary">
+            {exam.question_count} questions · {exam.duration_mins} minutes
           </p>
+          <p className="text-sm text-text-secondary">Pass mark: {exam.pass_mark}%</p>
+        </Card>
+        <ContentLock label="Subscribe to start this exam.">
+          <Link
+            href={`/cbt/${examId}/take`}
+            className="block text-center p-4 rounded-2xl bg-primary text-white font-semibold text-sm"
+          >
+            Start exam
+          </Link>
         </ContentLock>
       </div>
     </div>

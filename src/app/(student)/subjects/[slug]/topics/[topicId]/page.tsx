@@ -1,13 +1,15 @@
-export const dynamic = "force-dynamic";
-
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import StudentHeader from "@/components/student/StudentHeader";
+import Card from "@/components/ui/Card";
 import ContentLock from "@/components/student/ContentLock";
-import {
-  getTopicById,
-  getMaterialsByTopicId,
-  getSubjectBySlug,
-} from "@/lib/data/subjects";
+import { getSubjectBySlug } from "@/lib/data/student/subjects";
+import { getTopicById } from "@/lib/data/subjects";
+import { listMaterialsByTopic } from "@/lib/data/student/materials";
+import { getCurrentProfile } from "@/lib/data/student/profile";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string; topicId: string }>;
@@ -15,43 +17,70 @@ interface Props {
 
 export default async function TopicDetailPage({ params }: Props) {
   const { slug, topicId } = await params;
+  const subject = await getSubjectBySlug(slug);
+  if (!subject) notFound();
   const topic = await getTopicById(topicId);
   if (!topic) notFound();
-  const subject = await getSubjectBySlug(slug);
-  const materials = await getMaterialsByTopicId(topicId);
+  const materials = await listMaterialsByTopic(topicId);
+  const profile = await getCurrentProfile();
+
+  let topicExamId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("cbt_exams")
+      .select("id")
+      .eq("topic_id", topicId)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    topicExamId = data?.id || null;
+  } catch {
+    topicExamId = null;
+  }
 
   return (
     <div>
-      <StudentHeader title={topic.title} showBack backHref={`/subjects/${slug}`} />
+      <StudentHeader
+        title={topic.title}
+        showBack
+        backHref={`/subjects/${slug}`}
+        userName={profile?.full_name || "Student"}
+      />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
-        <div>
-          <p className="text-sm text-text-muted">
-            {subject?.name} · {topic.duration}
-          </p>
-          <h2 className="text-xl font-heading font-bold text-text-primary mt-1">{topic.title}</h2>
-          <p className="mt-2 text-sm text-text-secondary">{topic.description}</p>
-        </div>
+        {topic.description && (
+          <p className="text-sm text-text-secondary">{topic.description}</p>
+        )}
 
-        <ContentLock label="Subscribe to access this topic.">
-          <div className="space-y-3">
-            <h3 className="font-heading font-semibold text-text-primary">Materials</h3>
-            {materials.length === 0 && (
-              <p className="text-sm text-text-muted">No materials yet.</p>
-            )}
-            {materials.map((m) => (
-              <div
-                key={m.id}
-                className="p-4 bg-white rounded-2xl border border-gray-100 shadow-soft"
-              >
-                <p className="text-xs uppercase text-text-muted">{m.type}</p>
-                <p className="font-medium text-text-primary">{m.title}</p>
-                {m.source && (
-                  <p className="text-xs text-text-muted mt-1 break-all">{m.source}</p>
-                )}
-              </div>
-            ))}
-          </div>
+        <h3 className="font-heading font-semibold">Materials</h3>
+        <ContentLock label="Subscribe to view videos, PDFs, and images.">
+          {materials.length === 0 ? (
+            <p className="text-sm text-text-muted p-4">No materials for this topic yet.</p>
+          ) : (
+            <div className="space-y-3 p-2">
+              {materials.map((m) => (
+                <Card key={m.id} padding="sm">
+                  <p className="text-xs uppercase text-text-muted">{m.type}</p>
+                  <p className="font-medium text-sm">{m.title}</p>
+                  {m.source && (
+                    <p className="text-xs text-primary mt-1 break-all">{m.source}</p>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
         </ContentLock>
+
+        {topicExamId && (
+          <ContentLock label="Subscribe to start this topic CBT.">
+            <Link
+              href={`/cbt/${topicExamId}`}
+              className="block text-center p-4 rounded-2xl bg-primary text-white font-semibold text-sm"
+            >
+              Start topic CBT
+            </Link>
+          </ContentLock>
+        )}
       </div>
     </div>
   );

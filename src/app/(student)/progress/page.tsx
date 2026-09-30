@@ -1,34 +1,44 @@
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";
 import ProgressBar from "@/components/ui/ProgressBar";
-import { subjects } from "@/lib/mock/subjects";
-import { topics } from "@/lib/mock/topics";
+import { getCurrentProfile } from "@/lib/data/student/profile";
+import { getProgressForStudent } from "@/lib/data/student/progress";
+import { listPublishedSubjects, getTopicsBySubject } from "@/lib/data/student/subjects";
 
-export default function ProgressPage() {
-  const subjectProgress = subjects.map((s) => {
-    const subjectTopics = topics.filter((t) => t.subjectSlug === s.slug);
-    const avg =
-      subjectTopics.length > 0
-        ? Math.round(
-            subjectTopics.reduce((sum, t) => sum + t.progress, 0) /
-              subjectTopics.length
-          )
-        : 0;
-    return { ...s, progress: avg, topicCount: subjectTopics.length };
+export const dynamic = "force-dynamic";
+
+export default async function ProgressPage() {
+  const profile = await getCurrentProfile();
+  const progressRows = profile ? await getProgressForStudent(profile.id) : [];
+  const subjects = await listPublishedSubjects();
+
+  const progressMap: Record<string, number> = {};
+  progressRows.forEach((p: { topic_id: string; percent?: number; completed?: boolean }) => {
+    progressMap[p.topic_id] = p.percent ?? (p.completed ? 100 : 0);
   });
 
-  const overall =
-    topics.length > 0
-      ? Math.round(topics.reduce((sum, t) => sum + t.progress, 0) / topics.length)
-      : 0;
+  let totalTopics = 0;
+  let sum = 0;
+  const subjectProgress: { name: string; progress: number; topicCount: number }[] = [];
 
-  const recent = topics
-    .filter((t) => t.completed || t.progress > 50)
-    .slice(0, 5);
+  for (const s of subjects) {
+    const topics = await getTopicsBySubject(s.id);
+    totalTopics += topics.length;
+    const avg =
+      topics.length > 0
+        ? Math.round(
+            topics.reduce((acc, t) => acc + (progressMap[t.id] || 0), 0) / topics.length
+          )
+        : 0;
+    sum += topics.reduce((acc, t) => acc + (progressMap[t.id] || 0), 0);
+    subjectProgress.push({ name: s.name, progress: avg, topicCount: topics.length });
+  }
+
+  const overall = totalTopics > 0 ? Math.round(sum / totalTopics) : 0;
 
   return (
     <div>
-      <StudentHeader title="Progress" />
+      <StudentHeader title="Progress" userName={profile?.full_name || "Student"} />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
         <Card className="text-center">
           <p className="text-sm text-text-muted">Overall progress</p>
@@ -37,49 +47,21 @@ export default function ProgressPage() {
             <ProgressBar value={overall} size="md" />
           </div>
         </Card>
-
-        <div>
-          <h3 className="font-heading font-semibold text-text-primary mb-3">By subject</h3>
-          <div className="space-y-3">
-            {subjectProgress.map((s) => (
-              <Card key={s.id} padding="sm">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ backgroundColor: s.bgColor, color: s.color }}
-                  >
-                    {s.letter}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">{s.name}</span>
-                      <span className="text-text-muted">{s.progress}%</span>
-                    </div>
-                    <ProgressBar value={s.progress} size="sm" />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {recent.length > 0 && (
-          <div>
-            <h3 className="font-heading font-semibold text-text-primary mb-3">In progress</h3>
-            <div className="space-y-2">
-              {recent.map((t) => (
-                <Card key={t.id} padding="sm">
-                  <div className="flex justify-between text-sm gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium">{t.title}</p>
-                      <ProgressBar value={t.progress} size="sm" className="mt-1" />
-                    </div>
-                    <span className="text-text-muted self-center">{t.progress}%</span>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
+        {subjectProgress.length === 0 ? (
+          <Card className="text-center py-8">
+            <p className="text-sm text-text-muted">No subjects yet. Check back soon.</p>
+          </Card>
+        ) : (
+          subjectProgress.map((s) => (
+            <Card key={s.name}>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="font-medium">{s.name}</span>
+                <span className="text-text-muted">{s.progress}%</span>
+              </div>
+              <ProgressBar value={s.progress} size="sm" />
+              <p className="text-xs text-text-muted mt-1">{s.topicCount} topics</p>
+            </Card>
+          ))
         )}
       </div>
     </div>

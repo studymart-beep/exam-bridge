@@ -1,26 +1,25 @@
+import StudentHeader from "@/components/student/StudentHeader";
+import Card from "@/components/ui/Card";
+import SubjectCard from "@/components/student/SubjectCard";
+import { listPublishedSubjects } from "@/lib/data/student/subjects";
+import { getCurrentProfile } from "@/lib/data/student/profile";
+
 export const dynamic = "force-dynamic";
 
-import StudentHeader from "@/components/student/StudentHeader";
-import SubjectCard from "@/components/student/SubjectCard";
-import { getSubjects } from "@/lib/data/subjects";
-
 export default async function SubjectsPage() {
-  const list = await getSubjects();
+  const list = await listPublishedSubjects();
+  const profile = await getCurrentProfile();
 
   return (
     <div>
-      <StudentHeader title="Subjects" />
-      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
-        <div>
-          <h2 className="text-xl font-heading font-bold text-text-primary">Subjects</h2>
-          <p className="text-sm text-text-secondary">Select a subject to start learning</p>
-        </div>
+      <StudentHeader title="Subjects" userName={profile?.full_name || "Student"} />
+      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-4">
         {list.length === 0 ? (
-          <p className="text-center text-text-muted text-sm py-12">
-            No subjects yet. An admin can add them in the control panel.
-          </p>
+          <Card className="text-center py-10">
+            <p className="text-sm text-text-muted">No subjects yet. Check back soon.</p>
+          </Card>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {list.map((s) => (
               <SubjectCard
                 key={s.id}
@@ -28,12 +27,10 @@ export default async function SubjectsPage() {
                   id: s.id,
                   name: s.name,
                   slug: s.slug,
+                  description: s.description || "",
                   letter: s.letter || s.name.charAt(0),
                   color: s.color || "#1D4ED8",
-                  bgColor: s.bg_color || "#DBEAFE",
-                  topicCount: 0,
-                  description: s.description || "",
-                  generalCbtId: s.general_cbt_id,
+                  bgColor: s.bg_color || "#EFF6FF",
                 }}
               />
             ))}

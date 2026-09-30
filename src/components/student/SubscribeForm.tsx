@@ -1,9 +1,6 @@
 "use client";
 
-// NOTE: Subscription enforcement uses profiles.subscription_expires_at after admin approval.
-
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
@@ -15,6 +12,7 @@ interface Props {
   bankName: string;
   accountName: string;
   accountNumber: string;
+  defaultName?: string;
 }
 
 export default function SubscribeForm({
@@ -22,11 +20,13 @@ export default function SubscribeForm({
   bankName,
   accountName,
   accountNumber,
+  defaultName = "",
 }: Props) {
-  const router = useRouter();
   const { showToast } = useToast();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState(defaultName);
+  const [file, setFile] = useState<File | null>(null);
 
   const handleCopy = async (text: string, label: string) => {
     try {
@@ -36,6 +36,29 @@ export default function SubscribeForm({
       showToast("Could not copy", "error");
     }
   };
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!name.trim()) {
+      setError("Full name is required");
+      return;
+    }
+    if (!file) {
+      setError("Receipt file is required");
+      return;
+    }
+    const fd = new FormData();
+    fd.set("receipt_name", name.trim());
+    fd.set("receipt", file);
+    startTransition(async () => {
+      const res = await submitPayment(fd);
+      if (res && !res.success) {
+        setError(res.error || "Failed");
+        showToast(res.error || "Failed", "error");
+      }
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -48,65 +71,49 @@ export default function SubscribeForm({
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-soft p-5 space-y-3">
-        <h3 className="font-heading font-semibold text-text-primary">Bank transfer</h3>
-        {[
-          { label: "Bank", value: bankName },
-          { label: "Account name", value: accountName },
-          { label: "Account number", value: accountNumber },
-        ].map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-xs text-text-muted">{row.label}</p>
-              <p className="text-sm font-medium">{row.value || "—"}</p>
-            </div>
-            {row.value && (
-              <button
-                type="button"
-                onClick={() => handleCopy(row.value, row.label)}
-                className="text-xs text-primary font-medium"
-              >
-                Copy
-              </button>
-            )}
-          </div>
-        ))}
+        <h3 className="font-heading font-semibold text-sm">Bank transfer</h3>
+        <div className="flex justify-between text-sm">
+          <span className="text-text-muted">Bank</span>
+          <button type="button" className="font-medium" onClick={() => handleCopy(bankName, "Bank")}>
+            {bankName}
+          </button>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-text-muted">Account name</span>
+          <button type="button" className="font-medium" onClick={() => handleCopy(accountName, "Name")}>
+            {accountName}
+          </button>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-text-muted">Account number</span>
+          <button type="button" className="font-medium text-primary" onClick={() => handleCopy(accountNumber, "Account number")}>
+            {accountNumber}
+          </button>
+        </div>
       </div>
 
-      <form
-        className="space-y-4"
-        action={(fd) => {
-          setError(null);
-          startTransition(async () => {
-            const res = await submitPayment(fd);
-            if (res?.error) {
-              setError(res.error);
-              return;
-            }
-            showToast("Payment submitted", "success");
-            router.push("/subscribe/pending");
-          });
-        }}
-      >
-        <input type="hidden" name="amount" value={price} />
-        <Input label="Name used for transfer" name="receipt_name" required />
+      <form onSubmit={onSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-soft p-5 space-y-4">
+        <Input
+          label="Full name (as on transfer)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1.5">
-            Receipt (optional)
+            Receipt (image or PDF, max 5 MB) *
           </label>
           <input
             type="file"
-            name="receipt"
-            accept="image/*,.pdf"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            required
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
             className="w-full text-sm"
           />
         </div>
-        {error && (
-          <p className="text-sm text-error bg-red-50 border border-red-100 rounded-xl px-3 py-2">
-            {error}
-          </p>
-        )}
+        {error && <p className="text-sm text-error">{error}</p>}
         <Button type="submit" fullWidth loading={pending}>
-          I have paid
+          Submit for approval
         </Button>
       </form>
     </div>

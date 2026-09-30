@@ -1,36 +1,36 @@
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";
-import { getExams } from "@/lib/data/cbt";
+import { listExamsForStudent } from "@/lib/data/student/cbt";
+import { getCurrentProfile } from "@/lib/data/student/profile";
 
-export default async function CBTListPage() {
-  const exams = await getExams();
+export const dynamic = "force-dynamic";
+
+export default async function CbtListPage() {
+  const exams = await listExamsForStudent();
+  const profile = await getCurrentProfile();
 
   return (
     <div>
-      <StudentHeader title="CBT Practice" />
-      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
-        <div>
-          <h2 className="text-xl font-heading font-bold text-text-primary">CBT Practice</h2>
-          <p className="text-sm text-text-secondary">Practice real exam questions</p>
-        </div>
-        <div className="space-y-3">
-          {exams.map((exam) => (
-            <Link key={exam.id} href={`/cbt/${exam.id}`}>
-              <Card className="hover:shadow-card transition-shadow">
-                <h3 className="font-heading font-semibold text-text-primary">{exam.title}</h3>
-                <p className="text-xs text-text-muted mt-1">
-                  {exam.question_count} Q · {exam.duration_mins} min · Pass {exam.pass_mark}%
+      <StudentHeader title="CBT Practice" userName={profile?.full_name || "Student"} />
+      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-3">
+        {exams.length === 0 ? (
+          <Card className="text-center py-10">
+            <p className="text-sm text-text-muted">No practice exams available yet.</p>
+          </Card>
+        ) : (
+          exams.map((e) => (
+            <Link key={e.id} href={`/cbt/${e.id}`}>
+              <Card className="hover:shadow-card transition-shadow mb-2">
+                <p className="font-medium">{e.title}</p>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {e.question_count} questions · {e.duration_mins} min · Pass {e.pass_mark}%
+                  {e.is_general ? " · General" : ""}
                 </p>
               </Card>
             </Link>
-          ))}
-          {exams.length === 0 && (
-            <p className="text-center text-text-muted text-sm py-12">No exams yet.</p>
-          )}
-        </div>
+          ))
+        )}
       </div>
     </div>
   );

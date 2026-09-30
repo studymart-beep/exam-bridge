@@ -50,3 +50,16 @@ export async function adminListSubscriptions() {
     .order("created_at", { ascending: false });
   return data || [];
 }
+
+export async function getReceiptSignedUrl(path: string): Promise<string | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.storage
+      .from("receipts")
+      .createSignedUrl(path, 60 * 60);
+    if (error) return null;
+    return data.signedUrl;
+  } catch {
+    return null;
+  }
+}
