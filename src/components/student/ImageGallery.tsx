@@ -9,7 +9,7 @@ interface ImageItem {
   source: string | null;
 }
 
-export default function ImageGallery({ images }: { images: ImageItem[] }) {
+export default function ImageGallery({ images = [] }: { images?: ImageItem[] }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
   const active = images.find((i) => i.id === lightbox);
 

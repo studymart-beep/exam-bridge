@@ -1,77 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import Button from "@/components/ui/Button";
-import VideoPlayer from "@/components/student/VideoPlayer";
-import PDFViewer from "@/components/student/PDFViewer";
-import ImageGallery from "@/components/student/ImageGallery";
-import { useToast } from "@/components/ui/Toast";
-import type { Topic } from "@/types";
-
-interface TopicDetailClientProps {
-  topic: Topic;
-  subjectSlug: string;
-}
-
-const tabs = ["Video", "PDF", "Images"] as const;
-
-export default function TopicDetailClient({
-  topic,
-}: TopicDetailClientProps) {
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Video");
-  const [completed, setCompleted] = useState(topic.completed);
-  const { showToast } = useToast();
-
-  const handleMarkComplete = () => {
-    setCompleted(true);
-    showToast("Topic marked as complete!", "success");
-  };
-
-  return (
-    <div className="space-y-5">
-      <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-150",
-              activeTab === tab
-                ? "bg-white text-text-primary shadow-soft"
-                : "text-text-secondary hover:text-text-primary"
-            )}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "Video" && <VideoPlayer title={topic.title} />}
-      {activeTab === "PDF" && <PDFViewer title={`${topic.title} Notes`} />}
-      {activeTab === "Images" && <ImageGallery />}
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        {topic.hasCbt && topic.cbtId && (
-          <Link href={`/cbt/${topic.cbtId}`} className="flex-1">
-            <Button fullWidth variant="primary">
-              Take CBT
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Button>
-          </Link>
-        )}
-        <Button
-          fullWidth
-          variant={completed ? "secondary" : "outline"}
-          onClick={handleMarkComplete}
-          disabled={completed}
-        >
-          {completed ? "Completed" : "Mark complete"}
-        </Button>
-      </div>
-    </div>
-  );
+/**
+ * Legacy component — topic content is rendered by the server page
+ * src/app/(student)/subjects/[slug]/topics/[topicId]/page.tsx
+ * This stub exists only so old imports do not break the build.
+ */
+export default function TopicDetailClient() {
+  return null;
 }
