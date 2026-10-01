@@ -27,21 +27,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full h-11 px-4 rounded-xl border bg-white text-text-primary placeholder:text-text-muted",
+            "w-full min-h-11 h-11 px-4 rounded-lg border bg-surface text-text-primary placeholder:text-text-muted text-base sm:text-sm",
             "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
             "transition-all duration-200",
             error
               ? "border-error focus:ring-error"
-              : "border-gray-200 hover:border-gray-300",
+              : "border-border hover:border-accent",
             className
           )}
           {...props}
         />
-        {error && (
-          <p className="mt-1.5 text-sm text-error">{error}</p>
-        )}
+        {error && <p className="mt-1 text-xs text-error">{error}</p>}
         {helperText && !error && (
-          <p className="mt-1.5 text-sm text-text-secondary">{helperText}</p>
+          <p className="mt-1 text-xs text-text-muted">{helperText}</p>
         )}
       </div>
     );

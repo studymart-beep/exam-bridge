@@ -36,7 +36,7 @@ export default function Dropdown({ trigger, items, align = "right" }: DropdownPr
       {open && (
         <div
           className={cn(
-            "absolute z-50 mt-1 min-w-[160px] bg-white rounded-xl border border-gray-100 shadow-elevated py-1",
+            "absolute z-50 mt-1 min-w-[160px] bg-surface rounded-xl border border-border shadow-elevated py-1",
             align === "right" ? "right-0" : "left-0"
           )}
         >

@@ -1,21 +1,31 @@
 import Link from "next/link";
-import LoginForm from "@/components/auth/LoginForm";
+import Logo from "@/components/brand/Logo";
+import Card from "@/components/ui/Card";
+import LoginForm from "@/components/student/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="h-14 flex items-center px-4 border-b border-gray-100 bg-white">
-        <Link href="/" className="text-sm text-primary font-medium">
-          ← Back
-        </Link>
-        <h1 className="flex-1 text-center font-heading font-semibold text-text-primary">
-          Sign in
-        </h1>
-        <div className="w-12" />
-      </header>
-      <main className="flex-1 max-w-md mx-auto w-full px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-10">
+      <Link href="/" className="mb-8 flex items-center gap-2">
+        <Logo size={40} showWordmark />
+      </Link>
+      <Card className="w-full max-w-sm space-y-6">
+        <div className="text-center">
+          <h1 className="font-heading text-xl font-bold text-text-primary">
+            Welcome back
+          </h1>
+          <p className="text-sm text-text-secondary mt-1">
+            Log in to continue learning
+          </p>
+        </div>
         <LoginForm />
-      </main>
+        <p className="text-center text-sm text-text-muted">
+          No account?{" "}
+          <Link href="/register" className="text-primary font-semibold hover:underline">
+            Register
+          </Link>
+        </p>
+      </Card>
     </div>
   );
 }

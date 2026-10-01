@@ -81,7 +81,7 @@ export default async function DashboardPage() {
             <Link
               key={tile.href}
               href={tile.href}
-              className="flex flex-col items-start p-4 bg-white rounded-2xl border border-gray-100 shadow-soft hover:shadow-card transition-all"
+              className="flex flex-col items-start p-4 bg-white rounded-2xl border border-border shadow-soft hover:shadow-card transition-all"
             >
               <h3 className="font-heading font-semibold text-text-primary text-sm">{tile.label}</h3>
               <p className="text-xs text-text-muted mt-0.5">{tile.sub}</p>

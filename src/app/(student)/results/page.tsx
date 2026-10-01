@@ -43,7 +43,7 @@ export default async function ResultsPage() {
                   <Link
                     key={r.id}
                     href={`/cbt/${r.exam_id}/result/${r.id}`}
-                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft"
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-border shadow-soft"
                   >
                     <div
                       className={`w-14 h-14 rounded-xl flex items-center justify-center font-heading font-bold text-lg ${

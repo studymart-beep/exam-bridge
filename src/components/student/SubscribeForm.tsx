@@ -62,7 +62,7 @@ export default function SubscribeForm({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-soft p-5">
+      <div className="bg-white rounded-2xl border border-border shadow-soft p-5">
         <h3 className="font-heading font-semibold text-text-primary">Exam Bridge Premium</h3>
         <p className="text-3xl font-heading font-bold text-primary mt-2">
           ₦{Number(price).toLocaleString()}{" "}
@@ -70,7 +70,7 @@ export default function SubscribeForm({
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-soft p-5 space-y-3">
+      <div className="bg-white rounded-2xl border border-border shadow-soft p-5 space-y-3">
         <h3 className="font-heading font-semibold text-sm">Bank transfer</h3>
         <div className="flex justify-between text-sm">
           <span className="text-text-muted">Bank</span>
@@ -92,7 +92,7 @@ export default function SubscribeForm({
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-soft p-5 space-y-4">
+      <form onSubmit={onSubmit} className="bg-white rounded-2xl border border-border shadow-soft p-5 space-y-4">
         <Input
           label="Full name (as on transfer)"
           value={name}

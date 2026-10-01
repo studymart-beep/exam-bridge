@@ -95,7 +95,7 @@ export default function TakeExamClient({
           {questions.length} questions · {exam.duration_mins} minutes · Pass mark{" "}
           {exam.pass_mark}%
         </p>
-        <ul className="text-left text-sm text-text-secondary space-y-2 bg-white rounded-2xl border border-gray-100 p-4">
+        <ul className="text-left text-sm text-text-secondary space-y-2 bg-white rounded-2xl border border-border p-4">
           <li>• Answer all questions before time runs out</li>
           <li>• You can navigate between questions freely</li>
           <li>• Submitting ends the exam immediately</li>
@@ -119,7 +119,7 @@ export default function TakeExamClient({
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between gap-3">
+      <div className="sticky top-0 z-20 bg-white border-b border-border px-4 py-3 flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-text-primary">
           Q{currentIndex + 1}/{questions.length}
         </span>
@@ -157,10 +157,10 @@ export default function TakeExamClient({
                   "w-full flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all",
                   selected
                     ? "border-primary bg-primary-light"
-                    : "border-gray-100 bg-white hover:border-gray-200"
+                    : "border-border bg-white hover:border-border"
                 )}
               >
-                <span className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-text-secondary">
+                <span className="w-8 h-8 rounded-lg bg-primary-light/40 flex items-center justify-center text-sm font-bold text-text-secondary">
                   {opt.label}
                 </span>
                 <span className="text-sm text-text-primary">{opt.option_text}</span>
@@ -170,7 +170,7 @@ export default function TakeExamClient({
         </div>
       </div>
 
-      <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 flex gap-2 max-w-lg mx-auto w-full">
+      <div className="sticky bottom-0 bg-white border-t border-border p-4 flex gap-2 max-w-lg mx-auto w-full">
         <Button
           variant="outline"
           disabled={currentIndex === 0}
@@ -207,7 +207,7 @@ export default function TakeExamClient({
                 ? "bg-primary text-white"
                 : answers[q.id]
                   ? "bg-green-50 text-success"
-                  : "bg-gray-100 text-text-muted"
+                  : "bg-primary-light text-text-muted"
             )}
           >
             {i + 1}

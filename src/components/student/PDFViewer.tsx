@@ -8,7 +8,7 @@ interface PDFViewerProps {
 export default function PDFViewer({ title, source }: PDFViewerProps) {
   if (!source) {
     return (
-      <div className="w-full min-h-[200px] bg-gray-50 rounded-2xl border border-gray-200 flex items-center justify-center p-6">
+      <div className="w-full min-h-[200px] bg-primary-light/40 rounded-2xl border border-border flex items-center justify-center p-6">
         <p className="text-sm text-text-muted">No PDF source</p>
       </div>
     );
@@ -21,7 +21,7 @@ export default function PDFViewer({ title, source }: PDFViewerProps) {
       {title && <p className="text-sm font-medium text-text-primary">{title}</p>}
       {isUrl ? (
         <>
-          <div className="w-full min-h-[480px] rounded-2xl border border-gray-200 overflow-hidden bg-white">
+          <div className="w-full min-h-[480px] rounded-2xl border border-border overflow-hidden bg-white">
             <iframe
               src={source}
               title={title || "PDF"}
@@ -38,7 +38,7 @@ export default function PDFViewer({ title, source }: PDFViewerProps) {
           </a>
         </>
       ) : (
-        <div className="w-full min-h-[120px] bg-gray-50 rounded-2xl border border-gray-200 flex flex-col items-center justify-center p-6 gap-2">
+        <div className="w-full min-h-[120px] bg-primary-light/40 rounded-2xl border border-border flex flex-col items-center justify-center p-6 gap-2">
           <p className="text-sm text-text-primary font-medium">{title || "PDF"}</p>
           <p className="text-xs text-text-muted break-all text-center">{source}</p>
         </div>

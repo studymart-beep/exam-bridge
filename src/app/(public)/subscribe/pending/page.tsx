@@ -18,7 +18,7 @@ export default function SubscribePendingPage() {
             Waiting for admin verification. This usually takes less than 30 minutes.
           </p>
         </div>
-        <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-soft text-left space-y-2">
+        <div className="p-4 bg-white rounded-2xl border border-border shadow-soft text-left space-y-2">
           <p className="text-xs text-text-muted">Estimated time</p>
           <p className="text-sm font-medium text-text-primary">Up to 30 minutes</p>
           <p className="text-xs text-text-secondary">

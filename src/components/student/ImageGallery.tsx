@@ -25,7 +25,7 @@ export default function ImageGallery({ images = [] }: { images?: ImageItem[] }) 
             key={img.id}
             type="button"
             onClick={() => setLightbox(img.id)}
-            className="aspect-square rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="aspect-square rounded-2xl overflow-hidden border border-border bg-primary-light/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             {img.source &&
             (img.source.startsWith("http") || img.source.startsWith("/")) ? (

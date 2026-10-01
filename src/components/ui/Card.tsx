@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { HTMLAttributes, forwardRef } from "react";
 
@@ -11,14 +13,14 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       none: "",
       sm: "p-3",
       md: "p-4 sm:p-5",
-      lg: "p-5 sm:p-6",
+      lg: "p-6",
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          "bg-surface rounded-2xl border border-gray-100 shadow-soft",
+          "bg-surface rounded-2xl border border-border/80 shadow-soft",
           paddings[padding],
           className
         )}

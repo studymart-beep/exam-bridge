@@ -12,7 +12,7 @@ export default function TopicCard({ topic, subjectSlug }: TopicCardProps) {
   return (
     <Link
       href={`/subjects/${subjectSlug}/topics/${topic.id}`}
-      className="block p-4 bg-white rounded-2xl border border-gray-100 shadow-soft hover:shadow-card hover:border-gray-200 transition-all duration-200"
+      className="block p-4 bg-white rounded-2xl border border-border shadow-soft hover:shadow-card hover:border-border transition-all duration-200"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">

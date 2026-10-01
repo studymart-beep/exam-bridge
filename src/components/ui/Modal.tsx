@@ -61,7 +61,7 @@ export default function Modal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
       <div
         className={cn(
-          "relative w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-elevated",
+          "relative w-full bg-surface rounded-t-2xl sm:rounded-2xl shadow-elevated",
           "animate-in slide-in-from-bottom sm:zoom-in-95 duration-200",
           sizes[size]
         )}
