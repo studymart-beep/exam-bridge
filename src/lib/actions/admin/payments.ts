@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/actions/admin/guard";
 
@@ -12,8 +11,11 @@ export async function approvePayment(paymentId: string) {
   let admin;
   try {
     admin = createAdminClient();
-  } catch {
-    admin = await createClient();
+  } catch (e) {
+    return {
+      success: false as const,
+      error: `Admin client failed: ${e instanceof Error ? e.message : String(e)}`,
+    };
   }
 
   const { data: payment, error: pErr } = await admin
@@ -21,12 +23,15 @@ export async function approvePayment(paymentId: string) {
     .select("*")
     .eq("id", paymentId)
     .single();
-  if (pErr || !payment) return { success: false as const, error: "Payment not found" };
+
+  if (pErr || !payment) {
+    return { success: false as const, error: pErr?.message || "Payment not found" };
+  }
 
   const expires = new Date();
   expires.setDate(expires.getDate() + 30);
 
-  await admin
+  const { error: updatePayErr } = await admin
     .from("payments")
     .update({
       status: "approved",
@@ -35,13 +40,21 @@ export async function approvePayment(paymentId: string) {
     })
     .eq("id", paymentId);
 
-  await admin
+  if (updatePayErr) {
+    return { success: false as const, error: `Payment update failed: ${updatePayErr.message}` };
+  }
+
+  const { error: updateProfErr } = await admin
     .from("profiles")
     .update({
       status: "active",
       subscription_expires_at: expires.toISOString(),
     })
     .eq("id", payment.student_id);
+
+  if (updateProfErr) {
+    return { success: false as const, error: `Profile update failed: ${updateProfErr.message}` };
+  }
 
   revalidatePath("/admin/payments");
   revalidatePath("/admin/subscriptions");
@@ -54,8 +67,17 @@ export async function rejectPayment(paymentId: string) {
   const auth = await requireAdmin();
   if (!auth.ok) return { success: false as const, error: auth.error };
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return {
+      success: false as const,
+      error: `Admin client failed: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+
+  const { error } = await admin
     .from("payments")
     .update({
       status: "rejected",
@@ -63,6 +85,7 @@ export async function rejectPayment(paymentId: string) {
       verified_at: new Date().toISOString(),
     })
     .eq("id", paymentId);
+
   if (error) return { success: false as const, error: error.message };
 
   revalidatePath("/admin/payments");

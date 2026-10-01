@@ -6,35 +6,49 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function requireAdmin(): Promise<
   { ok: true; userId: string } | { ok: false; error: string }
 > {
-  // Step 1: get the authenticated user (uses the user's session cookies)
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (authError || !user) {
-    return { ok: false, error: "Not signed in" };
-  }
+    if (authError || !user) {
+      return { ok: false, error: "Not signed in" };
+    }
 
-  // Step 2: check role using the service-role client (bypasses RLS)
-  const admin = createAdminClient();
-  const { data: profile, error: profileError } = await admin
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch (e) {
+      return {
+        ok: false,
+        error: `Admin client error: ${e instanceof Error ? e.message : String(e)}`,
+      };
+    }
 
-  if (profileError) {
+    const { data: profile, error: profileError } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      return {
+        ok: false,
+        error: `Profile lookup failed: ${profileError.message}`,
+      };
+    }
+
+    if (!profile || profile.role !== "admin") {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    return { ok: true, userId: user.id };
+  } catch (e) {
     return {
       ok: false,
-      error: `Profile lookup failed: ${profileError.message}`,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
     };
   }
-
-  if (!profile || profile.role !== "admin") {
-    return { ok: false, error: "Not authorized" };
-  }
-
-  return { ok: true, userId: user.id };
 }
