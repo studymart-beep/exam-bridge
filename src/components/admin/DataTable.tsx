@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import Card from "@/components/ui/Card";
 
 export interface Column<T> {
   key: string;
@@ -15,6 +16,8 @@ interface DataTableProps<T> {
   keyExtractor: (row: T) => string;
   emptyMessage?: string;
   className?: string;
+  /** Optional custom mobile card; default uses first columns */
+  renderCard?: (row: T) => React.ReactNode;
 }
 
 export default function DataTable<T>({
@@ -23,6 +26,7 @@ export default function DataTable<T>({
   keyExtractor,
   emptyMessage = "No data found",
   className,
+  renderCard,
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
@@ -30,42 +34,65 @@ export default function DataTable<T>({
     );
   }
 
+  const previewCols = columns.slice(0, 4);
+
   return (
-    <div className={cn("overflow-x-auto -mx-4 sm:mx-0", className)}>
-      <table className="w-full min-w-[640px] text-left">
-        <thead>
-          <tr className="border-b border-gray-100">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={cn(
-                  "px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted",
-                  col.className
-                )}
-              >
-                {col.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {data.map((row) => (
-            <tr
-              key={keyExtractor(row)}
-              className="hover:bg-gray-50/80 transition-colors"
-            >
+    <div className={cn(className)}>
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {data.map((row) => (
+          <Card key={keyExtractor(row)} className="space-y-2">
+            {renderCard
+              ? renderCard(row)
+              : previewCols.map((col) => (
+                  <div key={col.key} className="flex justify-between gap-2 text-sm">
+                    <span className="text-text-muted shrink-0">{col.header}</span>
+                    <span className="text-text-primary text-right font-medium truncate">
+                      {col.render(row)}
+                    </span>
+                  </div>
+                ))}
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-border bg-surface shadow-soft">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-primary-light/50 border-b border-border">
               {columns.map((col) => (
-                <td
+                <th
                   key={col.key}
-                  className={cn("px-4 py-3.5 text-sm text-text-primary", col.className)}
+                  className={cn(
+                    "px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-primary",
+                    col.className
+                  )}
                 >
-                  {col.render(row)}
-                </td>
+                  {col.header}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {data.map((row) => (
+              <tr
+                key={keyExtractor(row)}
+                className="hover:bg-accent-light/40 transition-colors"
+              >
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={cn("px-4 py-3.5 text-sm text-text-primary", col.className)}
+                  >
+                    {col.render(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

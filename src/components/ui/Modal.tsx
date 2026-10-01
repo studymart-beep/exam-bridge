@@ -11,6 +11,7 @@ interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  fullScreenOnMobile?: boolean;
 }
 
 export default function Modal({
@@ -20,15 +21,13 @@ export default function Modal({
   children,
   footer,
   size = "md",
+  fullScreenOnMobile = true,
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -53,25 +52,30 @@ export default function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-text-primary/40 p-0 sm:p-4"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
       <div
         className={cn(
-          "relative w-full bg-surface rounded-t-2xl sm:rounded-2xl shadow-elevated",
-          "animate-in slide-in-from-bottom sm:zoom-in-95 duration-200",
-          sizes[size]
+          "bg-surface shadow-elevated flex flex-col w-full",
+          fullScreenOnMobile
+            ? "h-[100dvh] sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl border-0 sm:border sm:border-border"
+            : "max-h-[90vh] rounded-2xl border border-border m-4",
+          sizes[size],
+          "sm:mx-auto"
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-surface shrink-0">
+            <h2 className="font-heading font-semibold text-text-primary text-base truncate">
+              {title}
+            </h2>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-text-muted hover:bg-gray-100 hover:text-text-primary transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-muted hover:bg-primary-light hover:text-primary"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,9 +84,18 @@ export default function Modal({
             </button>
           </div>
         )}
-        <div className="px-5 pb-5">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
         {footer && (
-          <div className="px-5 pb-5 pt-0 flex gap-3 justify-end">{footer}</div>
+          <div className="sticky bottom-0 border-t border-border px-4 py-3 bg-surface shrink-0 flex flex-col sm:flex-row gap-2 sm:justify-end">
+            {footer}
+          </div>
+        )}
+        {!footer && !title && (
+          <div className="absolute top-2 right-2">
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Close
+            </Button>
+          </div>
         )}
       </div>
     </div>

@@ -12,7 +12,7 @@ export default async function AdminSubscriptionsPage() {
     <div>
       <AdminHeader title="Subscriptions" subtitle={`${rows.length} students`} />
       <div className="px-4 sm:px-6 py-5 max-w-4xl mx-auto space-y-3">
-        <Card className="bg-blue-50 border-blue-100 text-sm text-primary">
+        <Card className="bg-primary-light border-blue-100 text-sm text-primary">
           Subscription activation happens through Payments approval.
         </Card>
         {rows.length === 0 ? (

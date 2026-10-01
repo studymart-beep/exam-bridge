@@ -56,7 +56,7 @@ export default function QuestionEditor({ initial, onSubmit, onCancel, loading }:
             onClick={() => setCorrect(k)}
             className={cn(
               "mt-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 transition-colors",
-              correct === k ? "bg-primary text-white" : "bg-gray-100 text-text-secondary hover:bg-gray-200"
+              correct === k ? "bg-primary text-white" : "bg-primary-light text-text-secondary hover:bg-gray-200"
             )}
           >
             {k}
@@ -72,7 +72,7 @@ export default function QuestionEditor({ initial, onSubmit, onCancel, loading }:
       ))}
       <p className="text-xs text-text-muted -mt-2">Click a letter to mark the correct answer</p>
       <Textarea label="Explanation" value={explanation} onChange={(e) => setExplanation(e.target.value)} placeholder="Why this answer is correct..." />
-      <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center text-sm text-text-muted">
+      <div className="border-2 border-dashed border-border rounded-xl p-4 text-center text-sm text-text-muted">
         Image upload placeholder (optional)
       </div>
       <div className="flex gap-3 justify-end pt-2">

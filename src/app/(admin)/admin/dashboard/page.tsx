@@ -15,7 +15,7 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <StatCard label="Students" value={stats.students} icon={<span className="text-primary">👥</span>} />
           <StatCard label="Active subs" value={stats.activeSubs} iconBg="bg-green-50" icon={<span className="text-success">✓</span>} />
-          <StatCard label="Subjects" value={stats.subjects} iconBg="bg-blue-50" icon={<span className="text-primary">📚</span>} />
+          <StatCard label="Subjects" value={stats.subjects} iconBg="bg-primary-light" icon={<span className="text-primary">📚</span>} />
           <StatCard label="Topics" value={stats.topics} iconBg="bg-amber-50" icon={<span className="text-warning">📝</span>} />
           <StatCard label="CBT exams" value={stats.exams} iconBg="bg-purple-50" icon={<span>❓</span>} />
           <StatCard label="Pending payments" value={stats.pendingPayments} iconBg="bg-red-50" icon={<span className="text-error">₦</span>} />

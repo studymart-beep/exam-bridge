@@ -185,7 +185,7 @@ export default function QuestionsManager({
           <select
             value={form.correct}
             onChange={(e) => setForm({ ...form, correct: e.target.value as "A" | "B" | "C" | "D" })}
-            className="w-full h-11 px-3 rounded-xl border border-gray-200 text-sm"
+            className="w-full h-11 px-3 rounded-xl border border-border text-sm"
           >
             {(["A", "B", "C", "D"] as const).map((lab) => (
               <option key={lab} value={lab}>

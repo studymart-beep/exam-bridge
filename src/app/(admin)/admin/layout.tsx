@@ -18,7 +18,6 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Login page: no admin chrome (hooks must run before any return)
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
@@ -27,7 +26,7 @@ export default function AdminLayout({
     <AdminMenuContext.Provider value={() => setSidebarOpen(true)}>
       <div className="flex min-h-screen bg-background">
         <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex-1 flex flex-col min-w-0">{children}</div>
+        <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">{children}</div>
       </div>
     </AdminMenuContext.Provider>
   );

@@ -12,7 +12,7 @@ export default function UploadPlaceholder({
       type="button"
       disabled
       title="Upload available once backend is connected"
-      className="w-full h-11 px-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 text-sm text-text-muted cursor-not-allowed opacity-70"
+      className="w-full h-11 px-4 rounded-xl border border-dashed border-gray-300 bg-primary-light/40 text-sm text-text-muted cursor-not-allowed opacity-70"
     >
       {label}
     </button>

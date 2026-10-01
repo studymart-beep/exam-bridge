@@ -15,7 +15,7 @@ export default async function AdminReportsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <StatCard label="Attempts" value={data.totalAttempts} icon={<span>📝</span>} />
           <StatCard label="Pass rate" value={`${data.passRate}%`} iconBg="bg-green-50" icon={<span className="text-success">✓</span>} />
-          <StatCard label="Topic coverage" value={`${data.completionRate}%`} iconBg="bg-blue-50" icon={<span className="text-primary">%</span>} />
+          <StatCard label="Topic coverage" value={`${data.completionRate}%`} iconBg="bg-primary-light" icon={<span className="text-primary">%</span>} />
         </div>
         <Card>
           <h3 className="font-heading font-semibold mb-3">Attempts over time</h3>

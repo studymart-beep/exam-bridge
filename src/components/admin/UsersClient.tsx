@@ -41,7 +41,7 @@ export default function UsersClient({ students }: { students: Student[] }) {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="h-11 px-3 rounded-xl border border-gray-200 text-sm bg-white"
+          className="h-11 px-3 rounded-lg border border-border text-sm bg-surface"
         >
           <option value="all">All statuses</option>
           <option value="active">Active</option>

@@ -55,9 +55,9 @@ export default function MaterialRow({
   onMoveDown,
 }: MaterialRowProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-soft">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white rounded-2xl border border-border shadow-soft">
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-primary-light/40 flex items-center justify-center flex-shrink-0">
           <TypeIcon type={material.type} />
         </div>
         <div className="min-w-0">
@@ -76,7 +76,7 @@ export default function MaterialRow({
         <button
           type="button"
           onClick={onMoveUp}
-          className="p-2 rounded-lg text-text-muted hover:bg-gray-100 text-xs"
+          className="p-2 rounded-lg text-text-muted hover:bg-primary-light text-xs"
           aria-label="Move up"
         >
           ↑
@@ -84,7 +84,7 @@ export default function MaterialRow({
         <button
           type="button"
           onClick={onMoveDown}
-          className="p-2 rounded-lg text-text-muted hover:bg-gray-100 text-xs"
+          className="p-2 rounded-lg text-text-muted hover:bg-primary-light text-xs"
           aria-label="Move down"
         >
           ↓

@@ -102,7 +102,7 @@ export default function TopicCbtManager({
             <button
               key={e.id}
               type="button"
-              className="w-full text-left p-3 rounded-xl border border-gray-100 hover:bg-gray-50 text-sm"
+              className="w-full text-left p-3 rounded-xl border border-border hover:bg-primary-light/40 text-sm"
               onClick={() =>
                 startTransition(async () => {
                   const res = await attachExamToTopic(e.id, topicId);

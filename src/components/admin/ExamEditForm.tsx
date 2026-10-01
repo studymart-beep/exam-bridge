@@ -59,7 +59,7 @@ export default function ExamEditForm({
       <select
         value={subjectId}
         onChange={(e) => setSubjectId(e.target.value)}
-        className="w-full h-11 px-3 rounded-xl border border-gray-200 text-sm"
+        className="w-full h-11 px-3 rounded-xl border border-border text-sm"
       >
         <option value="">— None —</option>
         {subjects.map((s) => (

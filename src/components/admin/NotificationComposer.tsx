@@ -42,7 +42,7 @@ export default function NotificationComposer() {
       <select
         value={audience}
         onChange={(e) => setAudience(e.target.value)}
-        className="w-full h-11 px-3 rounded-xl border border-gray-200 text-sm"
+        className="w-full h-11 px-3 rounded-xl border border-border text-sm"
       >
         <option value="all">All students</option>
         <option value="active">Only active</option>

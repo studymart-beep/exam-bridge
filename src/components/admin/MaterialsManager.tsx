@@ -100,7 +100,7 @@ export default function MaterialsManager({
           <select
             value={type}
             onChange={(e) => setType(e.target.value as "video" | "pdf" | "image")}
-            className="w-full h-11 px-3 rounded-xl border border-gray-200 text-sm"
+            className="w-full h-11 px-3 rounded-xl border border-border text-sm"
           >
             <option value="video">Video</option>
             <option value="pdf">PDF</option>

@@ -13,7 +13,7 @@ interface RevenueChartProps {
 export default function RevenueChart({
   data,
   height = 160,
-  color = "#1D4ED8",
+  color = "#166534",
   formatValue = (v) => String(v),
 }: RevenueChartProps) {
   if (data.length === 0) return null;
@@ -36,7 +36,7 @@ export default function RevenueChart({
             y1={height * (1 - frac)}
             x2="100"
             y2={height * (1 - frac)}
-            stroke="#E2E8F0"
+            stroke="#FDE68A"
             strokeWidth="0.3"
           />
         ))}
@@ -63,7 +63,7 @@ export default function RevenueChart({
                 y={height - 6}
                 textAnchor="middle"
                 fontSize="3.5"
-                fill="#94A3B8"
+                fill="#71717A"
               >
                 {d.label}
               </text>

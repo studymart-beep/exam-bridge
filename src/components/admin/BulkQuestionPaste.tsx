@@ -110,7 +110,7 @@ export default function BulkQuestionPaste({ onImport, onCancel }: BulkQuestionPa
       </div>
 
       {parsed && (
-        <div className="space-y-3 border-t border-gray-100 pt-4">
+        <div className="space-y-3 border-t border-border pt-4">
           <div className="flex items-center gap-2 text-sm">
             <Badge variant="success">{valid.length} valid</Badge>
             {failed.length > 0 && <Badge variant="error">{failed.length} failed</Badge>}
@@ -119,7 +119,7 @@ export default function BulkQuestionPaste({ onImport, onCancel }: BulkQuestionPa
           {parsed.map((p, i) => (
             <div
               key={i}
-              className={`p-3 rounded-xl border text-sm ${p.error ? "border-error/30 bg-red-50" : "border-gray-100 bg-gray-50"}`}
+              className={`p-3 rounded-xl border text-sm ${p.error ? "border-error/30 bg-red-50" : "border-border bg-primary-light/40"}`}
             >
               {p.error ? (
                 <p className="text-error font-medium">Q{i + 1}: {p.error}</p>
