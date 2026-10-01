@@ -13,6 +13,36 @@ export default function PaymentActions({ paymentId }: { paymentId: string }) {
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<"approve" | "reject" | null>(null);
 
+  const runAction = () => {
+    if (!mode) return;
+    const currentMode = mode;
+    startTransition(async () => {
+      try {
+        const res =
+          currentMode === "approve"
+            ? await approvePayment(paymentId)
+            : await rejectPayment(paymentId);
+
+        if (!res.success) {
+          showToast(res.error || "Failed", "error");
+        } else {
+          showToast(
+            currentMode === "approve" ? "Approved (+30 days)" : "Rejected",
+            "success"
+          );
+        }
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : "Unexpected error",
+          "error"
+        );
+      } finally {
+        setMode(null);
+        router.refresh();
+      }
+    });
+  };
+
   return (
     <>
       <div className="flex gap-2">
@@ -23,24 +53,11 @@ export default function PaymentActions({ paymentId }: { paymentId: string }) {
           Reject
         </Button>
       </div>
+
       <ConfirmDialog
         open={mode !== null}
         onClose={() => setMode(null)}
-        onConfirm={() => {
-          if (!mode) return;
-          startTransition(async () => {
-            const res =
-              mode === "approve"
-                ? await approvePayment(paymentId)
-                : await rejectPayment(paymentId);
-            if (!res.success) showToast(res.error || "Failed", "error");
-            else {
-              showToast(mode === "approve" ? "Approved (+30 days)" : "Rejected", "success");
-              setMode(null);
-              router.refresh();
-            }
-          });
-        }}
+        onConfirm={runAction}
         title={mode === "approve" ? "Approve payment?" : "Reject payment?"}
         message={
           mode === "approve"
