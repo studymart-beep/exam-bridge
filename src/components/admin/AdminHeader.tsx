@@ -6,10 +6,18 @@ interface AdminHeaderProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** Optional; falls back to layout context */
+  onMenuClick?: () => void;
 }
 
-export default function AdminHeader({ title, subtitle, actions }: AdminHeaderProps) {
-  const openSidebar = useAdminMenu();
+export default function AdminHeader({
+  title,
+  subtitle,
+  actions,
+  onMenuClick,
+}: AdminHeaderProps) {
+  const openFromContext = useAdminMenu();
+  const openSidebar = onMenuClick ?? openFromContext;
 
   return (
     <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur border-b border-border">
@@ -17,7 +25,7 @@ export default function AdminHeader({ title, subtitle, actions }: AdminHeaderPro
         <div className="flex items-center gap-2 min-w-0">
           <button
             type="button"
-            onClick={openSidebar}
+            onClick={() => openSidebar?.()}
             className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-secondary hover:bg-primary-light hover:text-primary"
             aria-label="Open menu"
           >

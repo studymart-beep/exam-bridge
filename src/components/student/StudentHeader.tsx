@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
+import { useStudentMenu } from "@/app/(student)/layout";
 
 interface StudentHeaderProps {
   title?: string;
@@ -9,6 +10,7 @@ interface StudentHeaderProps {
   backHref?: string;
   userName?: string;
   unreadCount?: number;
+  onOpenSidebar?: () => void;
 }
 
 export default function StudentHeader({
@@ -17,17 +19,32 @@ export default function StudentHeader({
   backHref = "/dashboard",
   userName = "Student",
   unreadCount = 0,
+  onOpenSidebar,
 }: StudentHeaderProps) {
-  const initials = userName
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "ST";
+  const openFromContext = useStudentMenu();
+  const openSidebar = onOpenSidebar ?? openFromContext;
+
+  const initials =
+    userName
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "ST";
 
   return (
     <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur border-b border-border">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => openSidebar?.()}
+          className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-secondary hover:bg-primary-light hover:text-primary"
+          aria-label="Open menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
         {showBack ? (
           <Link
             href={backHref}
@@ -36,13 +53,17 @@ export default function StudentHeader({
             ← Back
           </Link>
         ) : null}
-        {title && (
+        {title ? (
           <h1 className="font-heading font-semibold text-text-primary text-base flex-1 truncate">
             {title}
           </h1>
+        ) : (
+          <div className="flex-1" />
         )}
-        {!title && <div className="flex-1" />}
-        <Link href="/notifications" className="relative p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
+        <Link
+          href="/notifications"
+          className="relative p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+        >
           <svg
             className="w-5 h-5 text-text-secondary"
             fill="none"
@@ -62,7 +83,10 @@ export default function StudentHeader({
             </span>
           )}
         </Link>
-        <Link href="/profile" className="min-w-[44px] min-h-[44px] flex items-center justify-center">
+        <Link
+          href="/profile"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center"
+        >
           <Avatar initials={initials} size="sm" />
         </Link>
       </div>

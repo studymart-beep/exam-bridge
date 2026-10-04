@@ -1,18 +1,32 @@
+"use client";
+
+import { createContext, useContext, useState } from "react";
 import StudentSidebar from "@/components/student/StudentSidebar";
-import MobileTabBar from "@/components/student/MobileTabBar";
+
+const StudentMenuContext = createContext<() => void>(() => {});
+
+export function useStudentMenu() {
+  return useContext(StudentMenuContext);
+}
 
 export default function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-background">
-      <StudentSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 pb-20 lg:pb-0">{children}</main>
-        <MobileTabBar />
+    <StudentMenuContext.Provider value={() => setSidebarOpen(true)}>
+      <div className="flex min-h-screen bg-background">
+        <StudentSidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+        <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+          <main className="flex-1">{children}</main>
+        </div>
       </div>
-    </div>
+    </StudentMenuContext.Provider>
   );
 }
