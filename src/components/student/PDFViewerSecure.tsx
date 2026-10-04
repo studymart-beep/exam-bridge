@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
@@ -29,17 +30,7 @@ export default function PDFViewerSecure({
   const [numPages, setNumPages] = useState(0);
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const pdfDocRef = useRef<{
-    numPages: number;
-    getPage: (n: number) => Promise<{
-      getViewport: (o: { scale: number }) => { width: number; height: number };
-      render: (o: {
-        canvasContext: CanvasRenderingContext2D;
-        viewport: { width: number; height: number };
-      }) => { promise: Promise<void> };
-    }>;
-  } | null>(null);
-  const dataRef = useRef<ArrayBuffer | null>(null);
+  const pdfDocRef = useRef<PDFDocumentProxy | null>(null);
   const cacheKey = `pdf:${material.id}`;
 
   const renderPage = useCallback(async (pageNum: number) => {
@@ -52,15 +43,19 @@ export default function PDFViewerSecure({
     canvas.height = viewport.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+    const renderTask = pdfPage.render({
+      canvasContext: ctx,
+      viewport,
+    });
+    await renderTask.promise;
   }, []);
 
   const openPdfData = useCallback(
     async (data: ArrayBuffer) => {
       const pdfjs = await import("pdfjs-dist");
-      // worker from CDN
       pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-      const doc = await pdfjs.getDocument({ data: new Uint8Array(data) }).promise;
+      const doc = await pdfjs.getDocument({ data: new Uint8Array(data) })
+        .promise;
       pdfDocRef.current = doc;
       setNumPages(doc.numPages);
       setPage(1);
@@ -77,7 +72,6 @@ export default function PDFViewerSecure({
       const local = await getFile(cacheKey);
       if (local) {
         const buf = await local.blob.arrayBuffer();
-        dataRef.current = buf;
         await openPdfData(buf);
         setCached(true);
         setLoading(false);
@@ -91,7 +85,6 @@ export default function PDFViewerSecure({
       }
       const response = await fetch(res.url);
       const buf = await response.arrayBuffer();
-      dataRef.current = buf;
       await openPdfData(buf);
       setCached(false);
     } catch {
