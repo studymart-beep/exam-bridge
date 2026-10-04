@@ -6,10 +6,13 @@ export type StudentMaterial = {
   type: "video" | "pdf" | "image";
   title: string;
   source: string | null;
+  source_type?: string | null;
   order_index: number;
 };
 
-export async function listMaterialsByTopic(topicId: string): Promise<StudentMaterial[]> {
+export async function listMaterialsByTopic(
+  topicId: string
+): Promise<StudentMaterial[]> {
   try {
     const supabase = await createClient();
     const { data } = await supabase

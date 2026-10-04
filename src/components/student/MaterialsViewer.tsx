@@ -3,8 +3,8 @@
 import { useTransition } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import VideoPlayer from "@/components/student/VideoPlayer";
-import PDFViewer from "@/components/student/PDFViewer";
+import VideoPlayerSecure from "@/components/student/VideoPlayerSecure";
+import PDFViewerSecure from "@/components/student/PDFViewerSecure";
 import ImageGallery from "@/components/student/ImageGallery";
 import { markTopicProgress } from "@/app/actions/progress";
 import { useToast } from "@/components/ui/Toast";
@@ -14,6 +14,7 @@ type Material = {
   type: "video" | "pdf" | "image";
   title: string;
   source: string | null;
+  source_type?: string | null;
 };
 
 export default function MaterialsViewer({
@@ -33,9 +34,25 @@ export default function MaterialsViewer({
       {others.map((m) => (
         <Card key={m.id} padding="sm">
           {m.type === "video" && (
-            <VideoPlayer title={m.title} source={m.source} />
+            <VideoPlayerSecure
+              material={{
+                id: m.id,
+                title: m.title,
+                source: m.source,
+                source_type: m.source_type,
+              }}
+            />
           )}
-          {m.type === "pdf" && <PDFViewer title={m.title} source={m.source} />}
+          {m.type === "pdf" && (
+            <PDFViewerSecure
+              material={{
+                id: m.id,
+                title: m.title,
+                source: m.source,
+                source_type: m.source_type,
+              }}
+            />
+          )}
         </Card>
       ))}
       {images.length > 0 && (

@@ -15,6 +15,8 @@ import {
 } from "@/lib/actions/admin/materials";
 import type { AdminMaterialRow } from "@/lib/data/admin/materials";
 
+const MAX_MB = 500;
+
 export default function MaterialsManager({
   topicId,
   initial,
@@ -30,6 +32,7 @@ export default function MaterialsManager({
   const [type, setType] = useState<"video" | "pdf" | "image">("video");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [pending, startTransition] = useTransition();
 
   function openCreate() {
@@ -37,6 +40,7 @@ export default function MaterialsManager({
     setType("video");
     setTitle("");
     setSource("");
+    setFile(null);
     setModal(true);
   }
 
@@ -45,16 +49,32 @@ export default function MaterialsManager({
     setType(m.type);
     setTitle(m.title);
     setSource(m.source || "");
+    setFile(null);
     setModal(true);
   }
 
   function save() {
+    if (!title.trim()) {
+      showToast("Title is required", "error");
+      return;
+    }
+    if (!editing && (type === "video" || type === "pdf") && !file && !source.trim()) {
+      showToast("Upload a file or paste a Cloudflare / URL source", "error");
+      return;
+    }
+    if (file && file.size > MAX_MB * 1024 * 1024) {
+      showToast(`File must be ≤ ${MAX_MB} MB`, "error");
+      return;
+    }
+
     const fd = new FormData();
     fd.set("topic_id", topicId);
     fd.set("type", type);
     fd.set("title", title);
     fd.set("source", source);
+    if (file) fd.set("file", file);
     if (editing) fd.set("id", editing.id);
+
     startTransition(async () => {
       const res = editing ? await updateMaterial(fd) : await createMaterial(fd);
       if (!res.success) showToast(res.error || "Failed", "error");
@@ -88,38 +108,79 @@ export default function MaterialsManager({
           <Button size="sm" variant="ghost" onClick={() => openEdit(m)}>
             Edit
           </Button>
-          <Button size="sm" variant="ghost" className="text-error" onClick={() => setDeleteId(m.id)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-error"
+            onClick={() => setDeleteId(m.id)}
+          >
             Delete
           </Button>
         </Card>
       ))}
 
-      <Modal open={modal} onClose={() => setModal(false)} title={editing ? "Edit material" : "Add material"}>
+      <Modal
+        open={modal}
+        onClose={() => setModal(false)}
+        title={editing ? "Edit material" : "Add material"}
+      >
         <div className="space-y-4">
-          <label className="block text-sm font-medium">Type</label>
+          <label className="block text-sm font-medium text-text-primary">Type</label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as "video" | "pdf" | "image")}
-            className="w-full h-11 px-3 rounded-xl border border-border text-sm"
+            onChange={(e) => {
+              setType(e.target.value as "video" | "pdf" | "image");
+              setFile(null);
+            }}
+            className="w-full min-h-11 h-11 px-3 rounded-lg border border-border text-base sm:text-sm bg-surface"
+            disabled={!!editing}
           >
             <option value="video">Video</option>
             <option value="pdf">PDF</option>
             <option value="image">Image</option>
           </select>
-          <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
           <Input
-            label={type === "video" ? "Cloudflare video ID" : "File name / URL"}
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          {!editing && (type === "video" || type === "pdf") && (
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1.5">
+                Upload file (max {MAX_MB} MB)
+              </label>
+              <input
+                type="file"
+                accept={type === "video" ? "video/*" : "application/pdf"}
+                className="block w-full text-sm text-text-secondary"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              {file && (
+                <p className="text-xs text-text-muted mt-1">
+                  {file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)
+                </p>
+              )}
+            </div>
+          )}
+          <Input
+            label={
+              type === "video"
+                ? "Or Cloudflare Stream ID / URL"
+                : type === "pdf"
+                  ? "Or PDF URL"
+                  : "Image URL / path"
+            }
             value={source}
             onChange={(e) => setSource(e.target.value)}
+            placeholder={
+              type === "video" ? "cf_vid_… or leave empty if uploading" : "Optional if uploading"
+            }
           />
-          {type !== "video" && (
-            <p className="text-xs text-text-muted">File upload available after full storage wiring. Paste a URL for now.</p>
-          )}
-          <div className="flex gap-3 justify-end">
-            <Button variant="outline" onClick={() => setModal(false)}>
+          <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setModal(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button loading={pending} onClick={save}>
+            <Button loading={pending} onClick={save} className="w-full sm:w-auto">
               Save
             </Button>
           </div>
