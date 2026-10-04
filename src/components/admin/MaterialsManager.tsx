@@ -12,10 +12,35 @@ import {
   createMaterial,
   updateMaterial,
   deleteMaterial,
+  requestUploadUrl,
+  finalizeMaterial,
 } from "@/lib/actions/admin/materials";
 import type { AdminMaterialRow } from "@/lib/data/admin/materials";
 
 const MAX_MB = 500;
+
+function uploadWithProgress(
+  signedUrl: string,
+  file: File,
+  onProgress: (pct: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", signedUrl);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.send(file);
+  });
+}
 
 export default function MaterialsManager({
   topicId,
@@ -34,6 +59,8 @@ export default function MaterialsManager({
   const [source, setSource] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [pending, startTransition] = useTransition();
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   function openCreate() {
     setEditing(null);
@@ -41,6 +68,7 @@ export default function MaterialsManager({
     setTitle("");
     setSource("");
     setFile(null);
+    setProgress(0);
     setModal(true);
   }
 
@@ -53,30 +81,87 @@ export default function MaterialsManager({
     setModal(true);
   }
 
-  function save() {
+  async function save() {
     if (!title.trim()) {
       showToast("Title is required", "error");
       return;
     }
-    if (!editing && (type === "video" || type === "pdf") && !file && !source.trim()) {
-      showToast("Upload a file or paste a Cloudflare / URL source", "error");
-      return;
-    }
-    if (file && file.size > MAX_MB * 1024 * 1024) {
-      showToast(`File must be ≤ ${MAX_MB} MB`, "error");
+
+    // Edit metadata only
+    if (editing) {
+      const fd = new FormData();
+      fd.set("id", editing.id);
+      fd.set("topic_id", topicId);
+      fd.set("type", type);
+      fd.set("title", title);
+      fd.set("source", source);
+      startTransition(async () => {
+        const res = await updateMaterial(fd);
+        if (!res.success) showToast(res.error || "Failed", "error");
+        else {
+          showToast("Saved", "success");
+          setModal(false);
+          router.refresh();
+        }
+      });
       return;
     }
 
+    // New material with file → direct-to-Supabase
+    if (file && (type === "video" || type === "pdf")) {
+      if (file.size > MAX_MB * 1024 * 1024) {
+        showToast(`File must be ≤ ${MAX_MB} MB`, "error");
+        return;
+      }
+      setUploading(true);
+      setProgress(0);
+      try {
+        const urlRes = await requestUploadUrl({
+          topicId,
+          fileName: file.name,
+          contentType: file.type || (type === "pdf" ? "application/pdf" : "video/mp4"),
+          size: file.size,
+        });
+        if ("error" in urlRes) {
+          showToast(urlRes.error, "error");
+          return;
+        }
+        await uploadWithProgress(urlRes.signedUrl, file, setProgress);
+        const fin = await finalizeMaterial({
+          topicId,
+          title: title.trim(),
+          path: urlRes.path,
+          sourceType: "supabase",
+          mimeType: file.type || (type === "pdf" ? "application/pdf" : "video/mp4"),
+          size: file.size,
+        });
+        if (!fin.success) {
+          showToast(fin.error || "Finalize failed", "error");
+          return;
+        }
+        showToast("Uploaded", "success");
+        setModal(false);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Upload failed", "error");
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
+
+    // Source-only (Cloudflare / URL / image)
+    if (!source.trim()) {
+      showToast("Upload a file or provide a source", "error");
+      return;
+    }
     const fd = new FormData();
     fd.set("topic_id", topicId);
     fd.set("type", type);
     fd.set("title", title);
     fd.set("source", source);
-    if (file) fd.set("file", file);
-    if (editing) fd.set("id", editing.id);
-
     startTransition(async () => {
-      const res = editing ? await updateMaterial(fd) : await createMaterial(fd);
+      const res = await createMaterial(fd);
       if (!res.success) showToast(res.error || "Failed", "error");
       else {
         showToast("Saved", "success");
@@ -85,6 +170,8 @@ export default function MaterialsManager({
       }
     });
   }
+
+  const busy = pending || uploading;
 
   return (
     <>
@@ -121,7 +208,7 @@ export default function MaterialsManager({
 
       <Modal
         open={modal}
-        onClose={() => setModal(false)}
+        onClose={() => !busy && setModal(false)}
         title={editing ? "Edit material" : "Add material"}
       >
         <div className="space-y-4">
@@ -133,7 +220,7 @@ export default function MaterialsManager({
               setFile(null);
             }}
             className="w-full min-h-11 h-11 px-3 rounded-lg border border-border text-base sm:text-sm bg-surface"
-            disabled={!!editing}
+            disabled={!!editing || busy}
           >
             <option value="video">Video</option>
             <option value="pdf">PDF</option>
@@ -143,22 +230,37 @@ export default function MaterialsManager({
             label="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            disabled={busy}
           />
           {!editing && (type === "video" || type === "pdf") && (
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1.5">
-                Upload file (max {MAX_MB} MB)
+                Upload file (max {MAX_MB} MB) — goes direct to storage
               </label>
               <input
                 type="file"
                 accept={type === "video" ? "video/*" : "application/pdf"}
                 className="block w-full text-sm text-text-secondary"
+                disabled={busy}
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />
               {file && (
                 <p className="text-xs text-text-muted mt-1">
                   {file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)
                 </p>
+              )}
+              {uploading && (
+                <div className="mt-3 space-y-1">
+                  <div className="h-2 rounded-full bg-primary-light overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-200"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-text-secondary text-center">
+                    Uploading… {progress}%
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -172,16 +274,24 @@ export default function MaterialsManager({
             }
             value={source}
             onChange={(e) => setSource(e.target.value)}
+            disabled={busy}
             placeholder={
-              type === "video" ? "cf_vid_… or leave empty if uploading" : "Optional if uploading"
+              type === "video"
+                ? "Optional if uploading a file"
+                : "Optional if uploading"
             }
           />
           <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setModal(false)} className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setModal(false)}
+              disabled={busy}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button loading={pending} onClick={save} className="w-full sm:w-auto">
-              Save
+            <Button loading={busy} onClick={() => void save()} className="w-full sm:w-auto">
+              {uploading ? `Uploading ${progress}%` : "Save"}
             </Button>
           </div>
         </div>

@@ -72,3 +72,26 @@ If policies already exist, drop or rename duplicates first.
 ## 3. App env
 
 No new env vars. Uses existing Supabase URL + service role for admin uploads.
+
+## v10 — Signed uploads (large video/PDF)
+
+App uploads go **direct to Supabase** via `createSignedUploadUrl` (service role).
+No extra SQL is required if you already ran the v9 bucket + policy script.
+
+If PUT still fails for authenticated clients using user tokens (not service-signed URLs), ensure:
+
+```sql
+-- Optional: allow authenticated INSERT (signed upload tokens may still need object policies)
+drop policy if exists "Authenticated insert videos" on storage.objects;
+drop policy if exists "Authenticated insert pdfs" on storage.objects;
+
+create policy "Authenticated insert videos"
+on storage.objects for insert to authenticated
+with check (bucket_id = 'videos');
+
+create policy "Authenticated insert pdfs"
+on storage.objects for insert to authenticated
+with check (bucket_id = 'pdfs');
+```
+
+Admin uploads use the **service role** signed URL from the server, so they should work after buckets exist and `SUPABASE_SERVICE_ROLE_KEY` is set on Vercel.
