@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { useAdminMenu } from "../layout";
+import { useAdminMenu } from "@/components/admin/AdminMenuContext";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";

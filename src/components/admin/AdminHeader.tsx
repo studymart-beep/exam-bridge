@@ -1,6 +1,6 @@
 "use client";
 
-import { useAdminMenu } from "@/app/(admin)/admin/layout";
+import { useAdminMenu } from "@/components/admin/AdminMenuContext";
 
 interface AdminHeaderProps {
   title: string;

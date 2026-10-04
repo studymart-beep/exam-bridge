@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
-import { useStudentMenu } from "@/app/(student)/layout";
+import { useStudentMenu } from "@/components/student/StudentMenuContext";
 
 interface StudentHeaderProps {
   title?: string;
