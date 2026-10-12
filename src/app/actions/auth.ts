@@ -10,9 +10,13 @@ export async function signUpStudent(formData: FormData): Promise<AuthResult> {
   const password = String(formData.get("password") || "");
   const fullName = String(formData.get("fullName") || "").trim();
   const phone = String(formData.get("phone") || "").trim();
+  const stateOfOrigin = String(formData.get("stateOfOrigin") || "").trim();
 
   if (!email || !password || !fullName) {
     return { error: "Name, email and password are required." };
+  }
+  if (!stateOfOrigin) {
+    return { error: "State of origin is required." };
   }
   if (password.length < 6) {
     return { error: "Password must be at least 6 characters." };
@@ -23,7 +27,11 @@ export async function signUpStudent(formData: FormData): Promise<AuthResult> {
     email,
     password,
     options: {
-      data: { full_name: fullName, phone },
+      data: {
+        full_name: fullName,
+        phone,
+        state_of_origin: stateOfOrigin,
+      },
     },
   });
 

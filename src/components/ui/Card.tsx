@@ -5,10 +5,20 @@ import { HTMLAttributes, forwardRef } from "react";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: "none" | "sm" | "md" | "lg";
+  /** Soft interchangeable tint for grids */
+  tint?: "white" | "mist" | "gold" | "cream" | "blue";
 }
 
+const tintClass: Record<NonNullable<CardProps["tint"]>, string> = {
+  white: "bg-surface",
+  mist: "bg-mist",
+  gold: "bg-accent-light",
+  cream: "bg-cream",
+  blue: "bg-calm-light",
+};
+
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, padding = "md", children, ...props }, ref) => {
+  ({ className, padding = "md", tint = "white", children, ...props }, ref) => {
     const paddings = {
       none: "",
       sm: "p-3",
@@ -20,7 +30,8 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-surface rounded-2xl border border-border/80 shadow-soft",
+          "rounded-2xl border border-border/80 shadow-soft",
+          tintClass[tint],
           paddings[padding],
           className
         )}

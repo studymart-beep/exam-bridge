@@ -11,12 +11,13 @@ const config: Config = {
       colors: {
         primary: {
           DEFAULT: "#166534",
-          dark: "#14532D",
+          dark: "#052E16",
           hover: "#14532D",
           light: "#DCFCE7",
+          soft: "#BBF7D0",
         },
         secondary: {
-          DEFAULT: "#FACC15",
+          DEFAULT: "#EAB308",
           dark: "#CA8A04",
         },
         accent: {
@@ -24,10 +25,16 @@ const config: Config = {
           dark: "#CA8A04",
           light: "#FEF9C3",
         },
+        calm: {
+          DEFAULT: "#0369A1",
+          light: "#DBEAFE",
+        },
         success: "#16A34A",
         error: "#DC2626",
         warning: "#F59E0B",
-        background: "#FFFBEB",
+        background: "#F0FDF4",
+        cream: "#FFFBEB",
+        mist: "#F0FDF4",
         surface: "#FFFFFF",
         border: {
           DEFAULT: "#FDE68A",
@@ -53,6 +60,9 @@ const config: Config = {
       borderRadius: {
         xl: "0.75rem",
         "2xl": "1rem",
+      },
+      backgroundImage: {
+        "hero-soft": "linear-gradient(135deg, #F0FDF4 0%, #FEF9C3 100%)",
       },
     },
   },
