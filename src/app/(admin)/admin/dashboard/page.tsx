@@ -1,60 +1,237 @@
+import Link from "next/link";
+import Image from "next/image";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Card from "@/components/ui/Card";
-import StatCard from "@/components/admin/StatCard";
+import Button from "@/components/ui/Button";
 import { adminGetDashboardStats } from "@/lib/data/admin/reports";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const stats = await adminGetDashboardStats();
 
+  let recentSubjects: { id: string; name: string; created_at: string }[] = [];
+  let recentNotifs: { id: string; title: string; created_at: string }[] = [];
+  let pendingHint: string | null = null;
+
+  try {
+    const supabase = await createClient();
+    const { data: subs } = await supabase
+      .from("subjects")
+      .select("id, name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    recentSubjects = (subs as typeof recentSubjects) || [];
+
+    const { data: notifs } = await supabase
+      .from("notifications")
+      .select("id, title, created_at")
+      .order("created_at", { ascending: false })
+      .limit(3);
+    recentNotifs = (notifs as typeof recentNotifs) || [];
+
+    if (stats.pendingPayments > 0) {
+      pendingHint = `${stats.pendingPayments} payment(s) awaiting review`;
+    } else if (recentSubjects[0]) {
+      pendingHint = `Latest subject: ${recentSubjects[0].name}`;
+    }
+  } catch {
+    /* ok */
+  }
+
+  const activePct =
+    stats.students > 0
+      ? Math.round((stats.activeSubs / stats.students) * 100)
+      : 0;
+  const ringCirc = 2 * Math.PI * 40;
+  const ringOff = ringCirc * (1 - activePct / 100);
+  const maxDaily = Math.max(1, ...stats.dailyAttempts.map((x) => x.count));
+
   return (
     <div>
       <AdminHeader title="Dashboard" subtitle="Overview" />
-      <div className="px-4 sm:px-6 py-5 max-w-6xl mx-auto space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          <StatCard label="Students" value={stats.students} icon={<span className="text-primary">👥</span>} />
-          <StatCard label="Active subs" value={stats.activeSubs} iconBg="bg-green-50" icon={<span className="text-success">✓</span>} />
-          <StatCard label="Subjects" value={stats.subjects} iconBg="bg-primary-light" icon={<span className="text-primary">📚</span>} />
-          <StatCard label="Topics" value={stats.topics} iconBg="bg-amber-50" icon={<span className="text-warning">📝</span>} />
-          <StatCard label="CBT exams" value={stats.exams} iconBg="bg-purple-50" icon={<span>❓</span>} />
-          <StatCard label="Pending payments" value={stats.pendingPayments} iconBg="bg-red-50" icon={<span className="text-error">₦</span>} />
+      <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto space-y-5">
+        <div className="relative w-full h-[200px] md:h-[280px] rounded-2xl overflow-hidden">
+          <Image
+            src="/images/dashboard-hero.png"
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 1024px) 100vw, 1200px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/90 via-primary-dark/70 to-primary/40" />
+          <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
+            <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-white">
+              Welcome back, Admin
+            </h1>
+            <p className="text-sm text-white/85 mt-1">
+              Here&apos;s what&apos;s happening today.
+            </p>
+          </div>
         </div>
 
-        <Card>
-          <h3 className="font-heading font-semibold text-text-primary mb-3">Attempts (last 7 days)</h3>
-          <div className="flex items-end gap-2 h-32">
-            {stats.dailyAttempts.map((d) => {
-              const max = Math.max(1, ...stats.dailyAttempts.map((x) => x.count));
-              const h = Math.round((d.count / max) * 100);
-              return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { n: stats.students, l: "Students" },
+            { n: stats.activeSubs, l: "Active Subs" },
+            { n: stats.pendingPayments, l: "Pending Pay" },
+            { n: stats.subjects, l: "Subjects" },
+          ].map((s) => (
+            <Card key={s.l} className="text-center py-4">
+              <p className="font-heading text-xl font-bold text-primary">{s.n}</p>
+              <p className="text-xs text-text-muted mt-0.5">{s.l}</p>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="flex flex-col sm:flex-row items-center gap-6 p-5">
+          <div className="relative w-28 h-28 shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                className="text-primary-light"
+                stroke="currentColor"
+                strokeWidth="8"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                className="text-primary"
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={ringCirc}
+                strokeDashoffset={ringOff}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="font-heading font-bold text-lg text-primary">
+                {activePct}%
+              </span>
+            </div>
+          </div>
+          <div className="flex-1 w-full">
+            <p className="text-sm font-semibold mb-2">Active subscription rate</p>
+            <div className="flex items-end gap-1.5 h-20">
+              {stats.dailyAttempts.map((d) => (
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full bg-primary/20 rounded-t" style={{ height: `${Math.max(h, 4)}%` }} />
-                  <span className="text-[10px] text-text-muted">{d.day}</span>
-                  <span className="text-[10px] font-medium">{d.count}</span>
+                  <div
+                    className="w-full rounded-t bg-primary/30"
+                    style={{
+                      height: `${Math.max(8, (d.count / maxDaily) * 100)}%`,
+                    }}
+                  />
+                  <span className="text-[9px] text-text-muted">{d.day}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </Card>
 
-        <Card>
-          <h3 className="font-heading font-semibold text-text-primary mb-3">Recent activity</h3>
-          {stats.activity.length === 0 ? (
-            <p className="text-sm text-text-muted text-center py-6">Nothing here yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {stats.activity.map((a: { id: string; action: string; created_at: string }) => (
-                <li key={a.id} className="text-sm flex justify-between gap-3 border-b border-gray-50 pb-2">
-                  <span className="text-text-primary">{a.action}</span>
-                  <span className="text-xs text-text-muted whitespace-nowrap">
-                    {new Date(a.created_at).toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+        <Card className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1">
+            <p className="text-xs text-text-muted">Focus next</p>
+            <p className="font-semibold text-text-primary">
+              {pendingHint || "All caught up"}
+            </p>
+          </div>
+          <Link href={stats.pendingPayments > 0 ? "/admin/payments" : "/admin/subjects"}>
+            <Button size="sm">
+              {stats.pendingPayments > 0 ? "Review payments" : "Subjects"}
+            </Button>
+          </Link>
         </Card>
+
+        {recentSubjects.length > 0 && (
+          <div>
+            <h2 className="font-heading font-semibold mb-3">Recent Subjects</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-5">
+              {recentSubjects.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/admin/subjects`}
+                  className="min-w-[140px] md:min-w-0 rounded-2xl border border-border bg-surface p-3 shrink-0"
+                >
+                  <p className="text-sm font-medium line-clamp-2">{s.name}</p>
+                  <p className="text-[10px] text-text-muted mt-1">
+                    {new Date(s.created_at).toLocaleDateString()}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {recentNotifs.length > 0 && (
+          <div>
+            <div className="flex justify-between mb-2">
+              <h2 className="font-heading font-semibold">Notifications</h2>
+              <Link href="/admin/notifications" className="text-xs text-primary">
+                View all
+              </Link>
+            </div>
+            <Card className="divide-y divide-border p-0 overflow-hidden">
+              {recentNotifs.map((n) => (
+                <div key={n.id} className="px-4 py-3">
+                  <p className="text-sm font-medium line-clamp-1">{n.title}</p>
+                  <p className="text-[10px] text-text-muted">
+                    {new Date(n.created_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </Card>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { href: "/admin/users", label: "Students", sub: "Manage accounts" },
+            { href: "/admin/payments", label: "Payments", sub: "Approvals" },
+            { href: "/admin/subjects", label: "Subjects", sub: "Content" },
+            { href: "/admin/reports", label: "Reports", sub: "Insights" },
+          ].map((t) => (
+            <Link
+              key={t.href}
+              href={t.href}
+              className="rounded-2xl border border-border bg-surface p-4 min-h-[88px]"
+            >
+              <p className="text-sm font-semibold">{t.label}</p>
+              <p className="text-xs text-text-muted mt-0.5">{t.sub}</p>
+            </Link>
+          ))}
+        </div>
+
+        {stats.activity && stats.activity.length > 0 && (
+          <Card>
+            <h3 className="font-heading font-semibold mb-3">Recent Activity</h3>
+            <div className="space-y-2">
+              {stats.activity.slice(0, 8).map(
+                (a: { id?: string; action?: string; created_at?: string }, i: number) => (
+                  <div
+                    key={a.id || i}
+                    className="flex justify-between text-sm border-b border-border last:border-0 pb-2"
+                  >
+                    <span className="truncate text-text-secondary">
+                      {a.action || "Activity"}
+                    </span>
+                    <span className="text-[10px] text-text-muted shrink-0">
+                      {a.created_at
+                        ? new Date(a.created_at).toLocaleDateString()
+                        : ""}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

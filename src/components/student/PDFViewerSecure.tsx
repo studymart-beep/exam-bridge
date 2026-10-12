@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
-import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
@@ -111,6 +110,23 @@ export default function PDFViewerSecure({
     document.body.style.overflow = "hidden";
     window.history.pushState({ ebPdfFs: true }, "");
     if (!pdfDocRef.current) await load();
+  }
+
+  async function toggleOrientation() {
+    try {
+      const orient = screen.orientation as ScreenOrientation & {
+        lock?: (o: string) => Promise<void>;
+        type?: string;
+      };
+      const type = orient?.type || "";
+      if (type.includes("landscape")) {
+        await orient.lock?.("portrait");
+      } else {
+        await orient.lock?.("landscape");
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   function closeReader() {
@@ -233,17 +249,9 @@ export default function PDFViewerSecure({
         onClick={() => void openReader()}
         className="w-full text-left rounded-2xl overflow-hidden border border-border bg-surface shadow-sm active:scale-[0.99] transition"
       >
-        <div className="relative w-full aspect-[4/3] bg-primary-light flex items-center justify-center">
-          <Image
-            src="/logo.png"
-            alt=""
-            width={96}
-            height={96}
-            className="object-contain opacity-90"
-          />
-          <span className="absolute bottom-3 left-3 text-xs font-bold uppercase tracking-wide bg-primary text-white px-2 py-1 rounded-md">
-            PDF
-          </span>
+        <div className="relative w-full aspect-[4/3] bg-[#1A1A1A] flex flex-col items-center justify-center gap-2">
+          <span className="text-3xl font-bold text-white/80 tracking-wide">PDF</span>
+          <span className="text-xs text-white/50">Tap to open</span>
         </div>
         <div className="px-3 py-2.5">
           <p className="text-sm font-semibold text-text-primary truncate">
@@ -291,8 +299,15 @@ export default function PDFViewerSecure({
             </div>
           )}
 
-          {/* minimal zoom */}
           <div className="absolute top-3 left-3 z-30 flex gap-1">
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-black/50 text-white text-sm"
+              onClick={() => void toggleOrientation()}
+              aria-label="Rotate"
+            >
+              ↻
+            </button>
             <button
               type="button"
               className="min-w-[40px] min-h-[40px] rounded-full bg-black/50 text-white text-sm"

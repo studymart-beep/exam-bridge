@@ -1,8 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import StudentHeader from "@/components/student/StudentHeader";
-import SubscriptionBanner from "@/components/student/SubscriptionBanner";
 import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 import {
   getCurrentProfile,
   isSubscriptionActive,
@@ -12,10 +12,10 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const quickTiles = [
-  { href: "/subjects", label: "Subjects", sub: "Browse subjects" },
-  { href: "/cbt", label: "CBT Practice", sub: "Practice exams" },
-  { href: "/results", label: "Results", sub: "View results" },
-  { href: "/progress", label: "Progress", sub: "Track performance" },
+  { href: "/subjects", label: "Subjects", sub: "Browse & study" },
+  { href: "/cbt", label: "CBT Practice", sub: "Timed exams" },
+  { href: "/progress", label: "Progress", sub: "Track learning" },
+  { href: "/results", label: "Results", sub: "Past scores" },
 ];
 
 export default async function DashboardPage() {
@@ -26,90 +26,386 @@ export default async function DashboardPage() {
     profile?.email?.split("@")[0] ||
     "Student";
 
-  let unread = 0;
-  if (profile) {
-    try {
-      const supabase = await createClient();
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("student_id", profile.id)
-        .eq("read", false);
-      unread = count || 0;
-    } catch {
-      unread = 0;
-    }
+  let subjectsCount = 0;
+  let avgProgress = 0;
+  let attempts = 0;
+  let daysLeft: number | null = null;
+  let daily: { day: string; count: number }[] = [];
+  let recentSubjects: {
+    id: string;
+    name: string;
+    slug: string;
+    color: string | null;
+    topicCount: number;
+  }[] = [];
+  let notifications: {
+    id: string;
+    title: string;
+    created_at: string;
+    read: boolean;
+  }[] = [];
+  let continueTopic: {
+    title: string;
+    subjectName: string;
+    href: string;
+  } | null = null;
+  let activity: { id: string; action: string; created_at: string }[] = [];
+
+  if (profile?.subscription_expires_at && subscribed) {
+    daysLeft = Math.max(
+      0,
+      Math.ceil(
+        (new Date(profile.subscription_expires_at).getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24)
+      )
+    );
   }
 
-  const daysRemaining =
-    profile?.subscription_expires_at
-      ? Math.max(
-          0,
-          Math.ceil(
-            (new Date(profile.subscription_expires_at).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24)
-          )
-        )
-      : null;
+  try {
+    const supabase = await createClient();
+
+    const { count: sc } = await supabase
+      .from("subjects")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true);
+    subjectsCount = sc || 0;
+
+    if (profile) {
+      const { data: prog } = await supabase
+        .from("progress")
+        .select("percent, topic_id, last_viewed_at")
+        .eq("student_id", profile.id)
+        .order("last_viewed_at", { ascending: false });
+      if (prog && prog.length) {
+        avgProgress = Math.round(
+          prog.reduce((s, p) => s + (p.percent || 0), 0) / prog.length
+        );
+        const last = prog[0];
+        if (last?.topic_id) {
+          const { data: topic } = await supabase
+            .from("topics")
+            .select("id, title, subject_id, subjects(name, slug)")
+            .eq("id", last.topic_id)
+            .maybeSingle();
+          if (topic) {
+            const sub = topic.subjects as
+              | { name: string; slug: string }
+              | { name: string; slug: string }[]
+              | null;
+            const subObj = Array.isArray(sub) ? sub[0] : sub;
+            continueTopic = {
+              title: topic.title,
+              subjectName: subObj?.name || "Subject",
+              href: subObj?.slug
+                ? `/subjects/${subObj.slug}/topics/${topic.id}`
+                : "/subjects",
+            };
+          }
+        }
+      }
+
+      const { count: ac } = await supabase
+        .from("cbt_attempts")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", profile.id);
+      attempts = ac || 0;
+
+      const seven = new Date();
+      seven.setDate(seven.getDate() - 6);
+      const { data: att } = await supabase
+        .from("cbt_attempts")
+        .select("started_at")
+        .eq("student_id", profile.id)
+        .gte("started_at", seven.toISOString());
+      daily = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const count = (att || []).filter(
+          (a) => a.started_at?.slice(0, 10) === key
+        ).length;
+        daily.push({ day: key.slice(5), count });
+      }
+
+      const { data: notifs } = await supabase
+        .from("notifications")
+        .select("id, title, created_at, read")
+        .eq("student_id", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(3);
+      notifications = (notifs as typeof notifications) || [];
+
+      const { data: logs } = await supabase
+        .from("activity_logs")
+        .select("id, action, created_at")
+        .eq("student_id", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      activity = (logs as typeof activity) || [];
+    }
+
+    const { data: recent } = await supabase
+      .from("subjects")
+      .select("id, name, slug, color, created_at")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (recent) {
+      for (const s of recent) {
+        const { count } = await supabase
+          .from("topics")
+          .select("id", { count: "exact", head: true })
+          .eq("subject_id", s.id);
+        recentSubjects.push({
+          id: s.id,
+          name: s.name,
+          slug: s.slug,
+          color: s.color,
+          topicCount: count || 0,
+        });
+      }
+    }
+  } catch {
+    /* empty ok */
+  }
+
+  const maxDaily = Math.max(1, ...daily.map((d) => d.count));
+  const ringPct = Math.min(100, Math.max(0, avgProgress));
+  const ringCirc = 2 * Math.PI * 40;
+  const ringOff = ringCirc * (1 - ringPct / 100);
 
   return (
     <div>
-      <StudentHeader title="Home" userName={profile?.full_name || "Student"} unreadCount={unread} />
-      <SubscriptionBanner show={!subscribed} />
-      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
-        <div>
-          <h2 className="text-xl font-heading font-bold text-text-primary">
-            Welcome back, {firstName} 👋
-          </h2>
-          <div className="mt-2 flex items-center gap-2 flex-wrap">
-            {subscribed ? (
-              <>
-                <Badge variant="success">Active</Badge>
-                {daysRemaining !== null && (
-                  <span className="text-xs text-text-muted">
-                    expires in {daysRemaining} day{daysRemaining === 1 ? "" : "s"}
-                  </span>
-                )}
-              </>
-            ) : (
-              <Badge variant="warning">Inactive</Badge>
+      <StudentHeader title="Home" userName={profile?.full_name || "Student"} />
+      <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto space-y-5">
+        {/* Hero */}
+        <div className="relative w-full h-[200px] md:h-[280px] rounded-2xl overflow-hidden">
+          <Image
+            src="/images/dashboard-hero.png"
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 1024px) 100vw, 1200px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/90 via-primary-dark/70 to-primary/40" />
+          <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
+            <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-white">
+              Welcome back, {firstName}
+            </h1>
+            <p className="text-sm text-white/85 mt-1">
+              Your JAMB journey continues.
+            </p>
+            {!subscribed && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 text-white">
+                  Inactive
+                </span>
+                <Link href="/subscribe">
+                  <Button size="sm" className="bg-secondary text-primary-dark hover:bg-accent">
+                    Subscribe Now
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { n: subjectsCount, l: "Subjects" },
+            { n: `${avgProgress}%`, l: "Avg Progress" },
+            { n: attempts, l: "CBT Attempts" },
+            { n: daysLeft !== null ? daysLeft : "—", l: "Days Left" },
+          ].map((s) => (
+            <Card key={s.l} className="text-center py-4">
+              <p className="font-heading text-xl font-bold text-primary">{s.n}</p>
+              <p className="text-xs text-text-muted mt-0.5">{s.l}</p>
+            </Card>
+          ))}
+        </div>
+
+        {/* Progress ring + 7 day */}
+        <Card className="flex flex-col sm:flex-row items-center gap-6 p-5">
+          <div className="relative w-28 h-28 shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke="currentColor"
+                className="text-primary-light"
+                strokeWidth="8"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke="currentColor"
+                className="text-primary"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={ringCirc}
+                strokeDashoffset={ringOff}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="font-heading font-bold text-lg text-primary">
+                {ringPct}%
+              </span>
+            </div>
+          </div>
+          <div className="flex-1 w-full min-w-0">
+            <p className="text-sm font-semibold text-text-primary mb-2">
+              Overall Progress
+            </p>
+            <div className="flex items-end gap-1.5 h-20">
+              {daily.length === 0 ? (
+                <p className="text-xs text-text-muted">No activity this week</p>
+              ) : (
+                daily.map((d) => (
+                  <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-t bg-primary/30"
+                      style={{
+                        height: `${Math.max(8, (d.count / maxDaily) * 100)}%`,
+                      }}
+                    />
+                    <span className="text-[9px] text-text-muted">{d.day}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Continue */}
+        <Card className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {continueTopic ? (
+            <>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-text-muted">Continue where you left off</p>
+                <p className="font-semibold text-text-primary truncate">
+                  {continueTopic.title}
+                </p>
+                <p className="text-xs text-text-secondary">{continueTopic.subjectName}</p>
+              </div>
+              <Link href={continueTopic.href}>
+                <Button size="sm">Continue</Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="flex-1">
+                <p className="font-semibold text-text-primary">Start with a subject</p>
+                <p className="text-xs text-text-muted">Pick a subject and begin learning</p>
+              </div>
+              <Link href="/subjects">
+                <Button size="sm">Browse</Button>
+              </Link>
+            </>
+          )}
+        </Card>
+
+        {/* Newly added subjects */}
+        {recentSubjects.length > 0 && (
+          <div>
+            <h2 className="font-heading font-semibold text-text-primary mb-3">
+              Newly Added
+            </h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible">
+              {recentSubjects.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/subjects/${s.slug}`}
+                  className="min-w-[140px] md:min-w-0 rounded-2xl border border-border bg-surface p-3 shrink-0 hover:border-primary/30"
+                >
+                  <div
+                    className="w-8 h-8 rounded-lg mb-2 text-white text-xs font-bold flex items-center justify-center"
+                    style={{ backgroundColor: s.color || "#166534" }}
+                  >
+                    {s.name[0]}
+                  </div>
+                  <p className="text-sm font-medium line-clamp-2">{s.name}</p>
+                  <p className="text-[10px] text-text-muted mt-1">
+                    {s.topicCount} topics
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notifications */}
+        {notifications.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-heading font-semibold text-text-primary">
+                Notifications
+              </h2>
+              <Link href="/notifications" className="text-xs text-primary font-medium">
+                View all
+              </Link>
+            </div>
+            <Card className="divide-y divide-border p-0 overflow-hidden">
+              {notifications.map((n) => (
+                <div key={n.id} className="px-4 py-3 flex items-start gap-2">
+                  {!n.read && (
+                    <span className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-text-primary line-clamp-1">
+                      {n.title}
+                    </p>
+                    <p className="text-[10px] text-text-muted">
+                      {new Date(n.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          </div>
+        )}
+
+        {/* Quick tiles */}
         <div className="grid grid-cols-2 gap-3">
-          {quickTiles.map((tile) => (
+          {quickTiles.map((t) => (
             <Link
-              key={tile.href}
-              href={tile.href}
-              className="flex flex-col items-start p-4 bg-white rounded-2xl border border-border shadow-soft hover:shadow-card transition-all"
+              key={t.href}
+              href={t.href}
+              className="rounded-2xl border border-border bg-surface p-4 hover:border-primary/30 min-h-[88px]"
             >
-              <h3 className="font-heading font-semibold text-text-primary text-sm">{tile.label}</h3>
-              <p className="text-xs text-text-muted mt-0.5">{tile.sub}</p>
+              <p className="text-sm font-semibold text-text-primary">{t.label}</p>
+              <p className="text-xs text-text-muted mt-0.5">{t.sub}</p>
             </Link>
           ))}
         </div>
-        {unread > 0 && (
-          <Link
-            href="/notifications"
-            className="flex items-center gap-3 p-4 bg-primary-light/50 rounded-2xl border border-primary/10"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-sm">
-              {unread}
-            </div>
-            <div>
-              <p className="text-sm font-medium">
-                You have {unread} unread notification{unread > 1 ? "s" : ""}
-              </p>
-              <p className="text-xs text-text-secondary">Tap to view</p>
-            </div>
-          </Link>
+
+        {/* Activity */}
+        {activity.length > 0 && (
+          <div>
+            <h2 className="font-heading font-semibold text-text-primary mb-2">
+              Recent Activity
+            </h2>
+            <Card className="space-y-2">
+              {activity.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex justify-between gap-2 text-sm border-b border-border last:border-0 pb-2 last:pb-0"
+                >
+                  <span className="text-text-secondary truncate">{a.action}</span>
+                  <span className="text-[10px] text-text-muted shrink-0">
+                    {new Date(a.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
+            </Card>
+          </div>
         )}
-        <Card>
-          <h3 className="font-heading font-semibold text-text-primary mb-2">Quick tip</h3>
-          <p className="text-sm text-text-secondary">
-            Browse subjects freely. Materials and CBT start require an active subscription.
-          </p>
-        </Card>
       </div>
     </div>
   );

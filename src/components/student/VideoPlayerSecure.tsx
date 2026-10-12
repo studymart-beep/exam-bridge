@@ -7,7 +7,6 @@ import {
   useState,
   type PointerEvent as RPointerEvent,
 } from "react";
-import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
@@ -146,6 +145,23 @@ export default function VideoPlayerSecure({
         afterFs();
       }
     });
+  }
+
+  async function toggleOrientation() {
+    try {
+      const orient = screen.orientation as ScreenOrientation & {
+        lock?: (o: string) => Promise<void>;
+        type?: string;
+      };
+      const type = orient?.type || "";
+      if (type.includes("landscape")) {
+        await orient.lock?.("portrait");
+      } else {
+        await orient.lock?.("landscape");
+      }
+    } catch {
+      /* not supported */
+    }
   }
 
   function closePlayer() {
@@ -442,20 +458,35 @@ export default function VideoPlayerSecure({
           )}
 
           {/* Close */}
-          <button
-            type="button"
+          <div
             className={cn(
-              "absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg",
+              "absolute top-3 right-3 z-30 flex gap-2 transition-opacity",
               !controls && "opacity-0 pointer-events-none"
             )}
-            onClick={(e) => {
-              e.stopPropagation();
-              closePlayer();
-            }}
-            aria-label="Close"
           >
-            ✕
-          </button>
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                void toggleOrientation();
+              }}
+              aria-label="Rotate"
+            >
+              ↻
+            </button>
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                closePlayer();
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
 
           {/* Controls */}
           <div
@@ -592,18 +623,12 @@ export default function VideoPlayerSecure({
         onClick={() => void openPlayer()}
         className="w-full text-left rounded-2xl overflow-hidden border border-border bg-surface shadow-sm active:scale-[0.99] transition"
       >
-        <div className="relative w-full aspect-video bg-primary-dark">
-          <Image
-            src="/logo.png"
-            alt=""
-            fill
-            className="object-contain p-8 opacity-90"
-            sizes="(max-width: 768px) 100vw, 640px"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-            <span className="w-16 h-16 rounded-full bg-black/55 text-white flex items-center justify-center text-2xl pl-1">
+        <div className="relative w-full aspect-video bg-[#0A0A0A]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <span className="w-16 h-16 rounded-full bg-white/15 text-white flex items-center justify-center text-2xl pl-1 border border-white/20">
               ▶
             </span>
+            <span className="text-xs text-white/60">Video</span>
           </div>
         </div>
         <div className="px-3 py-2.5">

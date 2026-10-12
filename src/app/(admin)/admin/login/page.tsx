@@ -1,48 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useActionState } from "react";
 import Logo from "@/components/brand/Logo";
-import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { signInAdmin } from "@/app/actions/auth";
+import type { AuthResult } from "@/app/actions/auth";
+
+async function signInAdminAction(
+  _prev: AuthResult | null,
+  formData: FormData
+): Promise<AuthResult> {
+  return signInAdmin(formData);
+}
 
 export default function AdminLoginPage() {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const formData = new FormData(e.currentTarget);
-    const result = await signInAdmin(formData);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    }
-  }
+  const [state, formAction, pending] = useActionState(signInAdminAction, null);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-10">
-      <div className="mb-8 flex flex-col items-center gap-2">
-        <Logo size={48} />
-        <p className="font-heading font-bold text-primary text-lg">
-          Exam Bridge Admin
-        </p>
-      </div>
-      <Card className="w-full max-w-sm space-y-5">
-        <div className="text-center">
-          <h1 className="font-heading text-xl font-bold text-text-primary">
-            Admin sign in
+    <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 bg-gradient-to-br from-primary-dark via-primary to-accent-dark">
+      <div className="w-full max-w-[420px] rounded-2xl bg-surface shadow-elevated border border-border p-6 sm:p-8 space-y-5">
+        <div className="flex flex-col items-center text-center gap-2">
+          <Logo size={56} />
+          <p className="font-heading font-bold text-primary text-lg">Exam Bridge</p>
+          <h1 className="font-heading text-xl font-bold text-text-primary mt-1">
+            Admin Sign In
           </h1>
-          <p className="text-sm text-text-secondary mt-1">Authorized staff only</p>
+          <p className="text-sm text-text-secondary">Authorized staff only</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 rounded-xl bg-red-50 text-error text-sm border border-red-100">
-              {error}
+        <form action={formAction} className="space-y-4">
+          {state?.error && (
+            <div className="p-3 rounded-xl bg-red-50 text-error text-sm">
+              {state.error}
             </div>
           )}
           <Input
@@ -53,16 +42,11 @@ export default function AdminLoginPage() {
             placeholder="admin@example.com"
           />
           <Input label="Password" name="password" type="password" required />
-          <Button type="submit" fullWidth loading={loading}>
+          <Button type="submit" fullWidth loading={pending}>
             Sign in
           </Button>
         </form>
-        <p className="text-center text-xs text-text-muted">
-          <Link href="/" className="text-primary hover:underline">
-            ← Back to site
-          </Link>
-        </p>
-      </Card>
+      </div>
     </div>
   );
 }
