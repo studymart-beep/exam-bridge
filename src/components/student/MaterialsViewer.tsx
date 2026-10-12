@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import VideoPlayerSecure from "@/components/student/VideoPlayerSecure";
 import PDFViewerSecure from "@/components/student/PDFViewerSecure";
@@ -30,9 +29,9 @@ export default function MaterialsViewer({
   const others = materials.filter((m) => m.type !== "image");
 
   return (
-    <div className="space-y-4 p-2">
+    <div className="space-y-5">
       {others.map((m) => (
-        <Card key={m.id} padding="sm">
+        <div key={m.id} className="w-full">
           {m.type === "video" && (
             <VideoPlayerSecure
               material={{
@@ -53,10 +52,10 @@ export default function MaterialsViewer({
               }}
             />
           )}
-        </Card>
+        </div>
       ))}
       {images.length > 0 && (
-        <Card padding="sm">
+        <div className="rounded-2xl border border-border bg-surface p-3">
           <p className="text-sm font-medium mb-3">Images</p>
           <ImageGallery
             images={images.map((i) => ({
@@ -65,11 +64,12 @@ export default function MaterialsViewer({
               source: i.source,
             }))}
           />
-        </Card>
+        </div>
       )}
       <Button
         size="sm"
         variant="outline"
+        className="w-full min-h-[44px] sm:w-auto"
         loading={pending}
         onClick={() =>
           startTransition(async () => {

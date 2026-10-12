@@ -7,6 +7,7 @@ import {
   useState,
   type PointerEvent as RPointerEvent,
 } from "react";
+import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
@@ -41,15 +42,18 @@ export default function VideoPlayerSecure({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTap = useRef<{ t: number; x: number } | null>(null);
+  const lastTap = useRef<{ t: number; side: "left" | "right" } | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const singleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [iosFs, setIosFs] = useState(false);
 
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -57,7 +61,6 @@ export default function VideoPlayerSecure({
   const [buffered, setBuffered] = useState(0);
   const [controls, setControls] = useState(true);
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(1);
   const [speed, setSpeed] = useState(1);
   const [speedMenu, setSpeedMenu] = useState(false);
   const [isFs, setIsFs] = useState(false);
@@ -74,7 +77,7 @@ export default function VideoPlayerSecure({
     }, 3000);
   }, []);
 
-  const load = useCallback(async () => {
+  const loadUrl = useCallback(async () => {
     setLoading(true);
     setError(null);
     setActiveCacheKey(cacheKey);
@@ -104,36 +107,95 @@ export default function VideoPlayerSecure({
     }
   }, [cacheKey, material.id]);
 
+  async function openPlayer() {
+    setOpen(true);
+    if (!url) await loadUrl();
+    // try native fullscreen
+    requestAnimationFrame(() => {
+      const el = containerRef.current;
+      if (!el) return;
+      if (typeof el.requestFullscreen === "function") {
+        void el.requestFullscreen().catch(() => {
+          setIosFs(true);
+          document.body.style.overflow = "hidden";
+        });
+      } else {
+        setIosFs(true);
+        document.body.style.overflow = "hidden";
+      }
+      bumpControls();
+    });
+  }
+
+  function closePlayer() {
+    const v = videoRef.current;
+    if (v) {
+      v.pause();
+      setPlaying(false);
+    }
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+    setIosFs(false);
+    document.body.style.overflow = "";
+    setOpen(false);
+    setSpeedMenu(false);
+  }
+
   useEffect(() => {
-    void load();
     return () => {
       setActiveCacheKey(null);
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
       if (hideTimer.current) clearTimeout(hideTimer.current);
+      document.body.style.overflow = "";
     };
-  }, [load]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.playbackRate = speed;
-  }, [speed]);
-
-  useEffect(() => {
-    const onFs = () => setIsFs(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
 
   useEffect(() => {
+    const onFs = () => {
+      const active = Boolean(document.fullscreenElement);
+      setIsFs(active);
+      if (!active && open && !iosFs) {
+        // user exited via browser/OS
+        setOpen(false);
+        const v = videoRef.current;
+        if (v) v.pause();
+      }
+    };
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, [open, iosFs]);
+
+  // Android back / popstate
+  useEffect(() => {
+    if (!open) return;
+    const state = { ebVideoFs: true };
+    window.history.pushState(state, "");
+    const onPop = () => {
+      closePlayer();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (v) v.playbackRate = speed;
+  }, [speed, open, url]);
+
+  useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       const v = videoRef.current;
-      if (!v || !url) return;
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (!v) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closePlayer();
+        return;
+      }
       switch (e.key) {
         case " ":
-        case "k":
           e.preventDefault();
           if (v.paused) void v.play();
           else v.pause();
@@ -149,26 +211,14 @@ export default function VideoPlayerSecure({
           v.currentTime = Math.min(v.duration || 0, v.currentTime + 10);
           bumpControls();
           break;
-        case "ArrowUp":
-          e.preventDefault();
-          v.volume = Math.min(1, v.volume + 0.1);
-          setVolume(v.volume);
-          setMuted(v.volume === 0);
-          break;
-        case "ArrowDown":
-          e.preventDefault();
-          v.volume = Math.max(0, v.volume - 0.1);
-          setVolume(v.volume);
-          setMuted(v.volume === 0);
-          break;
-        case "f":
-          e.preventDefault();
-          void toggleFs();
-          break;
         case "m":
           e.preventDefault();
           v.muted = !v.muted;
           setMuted(v.muted);
+          break;
+        case "f":
+          e.preventDefault();
+          closePlayer();
           break;
         default:
           break;
@@ -177,7 +227,7 @@ export default function VideoPlayerSecure({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, bumpControls]);
+  }, [open, bumpControls]);
 
   function togglePlay() {
     const v = videoRef.current;
@@ -194,37 +244,35 @@ export default function VideoPlayerSecure({
     bumpControls();
   }
 
-  async function toggleFs() {
-    const el = containerRef.current;
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      await el.requestFullscreen?.();
-    } else {
-      await document.exitFullscreen?.();
-    }
-    bumpControls();
-  }
-
-  function onVideoPointer(e: RPointerEvent<HTMLDivElement>) {
+  function onSurfacePointer(e: RPointerEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
+    const side: "left" | "right" = x < rect.width / 2 ? "left" : "right";
     const now = Date.now();
     const prev = lastTap.current;
-    if (prev && now - prev.t < 300) {
-      const side = x < rect.width / 2 ? "left" : "right";
+
+    if (prev && now - prev.t < 320) {
+      if (singleTapTimer.current) {
+        clearTimeout(singleTapTimer.current);
+        singleTapTimer.current = null;
+      }
       skip(side === "left" ? -10 : 10);
       setRipple(side);
       setTimeout(() => setRipple(null), 400);
       lastTap.current = null;
       return;
     }
-    lastTap.current = { t: now, x };
-    setTimeout(() => {
-      if (lastTap.current && Date.now() - lastTap.current.t >= 280) {
-        setControls((c) => !c);
-        if (!controls) bumpControls();
-        lastTap.current = null;
+
+    lastTap.current = { t: now, side };
+    singleTapTimer.current = setTimeout(() => {
+      // single tap: if controls hidden, show them; if visible, play/pause
+      if (!controls) {
+        bumpControls();
+      } else {
+        togglePlay();
       }
+      lastTap.current = null;
+      singleTapTimer.current = null;
     }, 280);
   }
 
@@ -272,10 +320,6 @@ export default function VideoPlayerSecure({
       };
       await putFile(cacheKey, blob, meta);
       setCached(true);
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      const ou = URL.createObjectURL(blob);
-      objectUrlRef.current = ou;
-      setUrl(ou);
     } catch {
       setError("Download failed");
     } finally {
@@ -286,32 +330,38 @@ export default function VideoPlayerSecure({
   const playedPct = duration ? (current / duration) * 100 : 0;
   const bufferedPct = duration ? (buffered / duration) * 100 : 0;
 
-  return (
+  const playerShell = open && (
     <div
-      className="space-y-3 select-none"
-      onContextMenu={(e) => e.preventDefault()}
+      ref={containerRef}
+      className={cn(
+        "bg-black z-[200] flex flex-col",
+        iosFs
+          ? "fixed inset-0 w-[100vw] h-[100dvh]"
+          : "w-full h-full"
+      )}
     >
-      <p className="text-sm font-medium text-text-primary md:px-0 px-0">
-        {material.title}
-      </p>
-
       {loading && (
-        <p className="text-sm text-text-muted py-12 text-center">Loading video…</p>
+        <div className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">
+          Loading…
+        </div>
       )}
       {error && (
-        <p className="text-sm text-error py-4 text-center">{error}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3 z-10 p-4">
+          <p className="text-sm text-center">{error}</p>
+          <button
+            type="button"
+            className="min-h-[44px] px-4 rounded-lg bg-white/20"
+            onClick={closePlayer}
+          >
+            Close
+          </button>
+        </div>
       )}
 
-      {url && !loading && (
+      {url && (
         <div
-          ref={containerRef}
-          className={cn(
-            "relative bg-black overflow-hidden group",
-            "w-full aspect-video",
-            "md:rounded-2xl md:border md:border-border",
-            isFs && "rounded-none"
-          )}
-          onPointerUp={onVideoPointer}
+          className="relative flex-1 min-h-0 w-full"
+          onPointerUp={onSurfacePointer}
         >
           <video
             ref={videoRef}
@@ -320,7 +370,6 @@ export default function VideoPlayerSecure({
             playsInline
             preload="metadata"
             controlsList="nodownload nofullscreen"
-            disablePictureInPicture={false}
             onContextMenu={(e) => e.preventDefault()}
             onPlay={() => {
               setPlaying(true);
@@ -340,16 +389,18 @@ export default function VideoPlayerSecure({
             }}
             onLoadedMetadata={() => {
               const v = videoRef.current;
-              if (v) setDuration(v.duration || 0);
+              if (v) {
+                setDuration(v.duration || 0);
+                void v.play().catch(() => undefined);
+              }
             }}
             onClick={(e) => e.preventDefault()}
           />
 
-          {/* Double-tap ripple */}
           {ripple && (
             <div
               className={cn(
-                "pointer-events-none absolute inset-y-0 w-1/2 flex items-center justify-center text-white text-2xl font-bold bg-white/10",
+                "pointer-events-none absolute inset-y-0 w-1/2 flex items-center justify-center text-white text-2xl font-bold bg-white/15",
                 ripple === "left" ? "left-0" : "right-0"
               )}
             >
@@ -357,62 +408,40 @@ export default function VideoPlayerSecure({
             </div>
           )}
 
-          {/* Center play */}
-          {controls && (
-            <button
-              type="button"
-              className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm transition-opacity duration-200 z-10"
-              style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                togglePlay();
-              }}
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? (
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z" />
-                </svg>
-              ) : (
-                <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7L8 5z" />
-                </svg>
-              )}
-            </button>
-          )}
+          {/* Close */}
+          <button
+            type="button"
+            className={cn(
+              "absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg",
+              !controls && "opacity-0 pointer-events-none"
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              closePlayer();
+            }}
+            aria-label="Close"
+          >
+            ✕
+          </button>
 
-          {/* Fullscreen close */}
-          {isFs && controls && (
-            <button
-              type="button"
-              className="absolute top-3 right-3 z-20 min-w-[44px] min-h-[44px] rounded-full bg-black/50 text-white text-lg"
-              onClick={(e) => {
-                e.stopPropagation();
-                void toggleFs();
-              }}
-              aria-label="Exit fullscreen"
-            >
-              ✕
-            </button>
-          )}
-
-          {/* Bottom bar */}
+          {/* Controls */}
           <div
             className={cn(
-              "absolute inset-x-0 bottom-0 z-20 transition-opacity duration-200",
-              "bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-10 pb-2 px-2",
+              "absolute inset-x-0 bottom-0 z-30 transition-opacity duration-200",
+              "bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-12 pb-[max(0.5rem,env(safe-area-inset-bottom))] px-3",
               controls ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
             onClick={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
           >
-            {/* Seek */}
             <div
-              className="relative h-5 flex items-center cursor-pointer group/seek mb-1"
+              className="relative h-6 flex items-center cursor-pointer mb-2"
               onPointerDown={(e) => {
                 setScrubbing(true);
                 seekFromClientX(e.clientX, e.currentTarget);
                 const bar = e.currentTarget;
-                const move = (ev: PointerEvent) => seekFromClientX(ev.clientX, bar);
+                const move = (ev: PointerEvent) =>
+                  seekFromClientX(ev.clientX, bar);
                 const up = () => {
                   setScrubbing(false);
                   window.removeEventListener("pointermove", move);
@@ -434,85 +463,66 @@ export default function VideoPlayerSecure({
                 />
               </div>
               <div
-                className="absolute w-3 h-3 rounded-full bg-secondary shadow -translate-x-1/2"
+                className="absolute w-3.5 h-3.5 rounded-full bg-secondary shadow -translate-x-1/2"
                 style={{ left: `${playedPct}%` }}
               />
             </div>
 
-            <div className="flex items-center gap-1 text-white">
+            <div className="flex flex-wrap items-center gap-1 text-white">
               <button
                 type="button"
-                className="min-w-[40px] min-h-[40px] flex items-center justify-center"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-base"
                 onClick={togglePlay}
-                aria-label={playing ? "Pause" : "Play"}
               >
                 {playing ? "❚❚" : "▶"}
               </button>
               <button
                 type="button"
-                className="min-w-[40px] min-h-[40px] text-xs font-semibold"
+                className="min-w-[44px] min-h-[44px] text-xs font-semibold"
                 onClick={() => skip(-10)}
               >
                 −10
               </button>
               <button
                 type="button"
-                className="min-w-[40px] min-h-[40px] text-xs font-semibold"
+                className="min-w-[44px] min-h-[44px] text-xs font-semibold"
                 onClick={() => skip(10)}
               >
                 +10
               </button>
-              <span className="text-xs tabular-nums px-1 shrink-0">
+              <span className="text-xs tabular-nums px-1">
                 {formatTime(current)} / {formatTime(duration)}
               </span>
-              <div className="flex-1" />
+              <div className="flex-1 min-w-[8px]" />
               <button
                 type="button"
-                className="min-w-[40px] min-h-[40px] text-sm"
+                className="min-w-[44px] min-h-[44px] text-sm"
                 onClick={() => {
                   const v = videoRef.current;
                   if (!v) return;
                   v.muted = !v.muted;
                   setMuted(v.muted);
+                  bumpControls();
                 }}
-                aria-label="Mute"
               >
-                {muted || volume === 0 ? "🔇" : "🔊"}
+                {muted ? "🔇" : "🔊"}
               </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={muted ? 0 : volume}
-                className="w-16 accent-primary hidden sm:block"
-                onChange={(e) => {
-                  const v = videoRef.current;
-                  const val = Number(e.target.value);
-                  if (v) {
-                    v.volume = val;
-                    v.muted = val === 0;
-                  }
-                  setVolume(val);
-                  setMuted(val === 0);
-                }}
-              />
               <div className="relative">
                 <button
                   type="button"
-                  className="min-w-[40px] min-h-[40px] text-xs font-semibold"
+                  className="min-w-[44px] min-h-[44px] text-xs font-semibold"
                   onClick={() => setSpeedMenu((s) => !s)}
                 >
                   {speed}x
                 </button>
                 {speedMenu && (
-                  <div className="absolute bottom-full right-0 mb-1 rounded-lg bg-black/90 border border-white/10 py-1 min-w-[4.5rem]">
+                  <div className="absolute bottom-full right-0 mb-1 rounded-lg bg-black/95 border border-white/10 py-1 min-w-[4.5rem]">
                     {SPEEDS.map((s) => (
                       <button
                         key={s}
                         type="button"
                         className={cn(
-                          "block w-full text-left px-3 py-1.5 text-xs hover:bg-white/10",
+                          "block w-full text-left px-3 py-2 text-xs hover:bg-white/10",
                           s === speed && "text-secondary font-bold"
                         )}
                         onClick={() => {
@@ -528,49 +538,69 @@ export default function VideoPlayerSecure({
               </div>
               <button
                 type="button"
-                className="min-w-[40px] min-h-[40px] text-sm hidden sm:flex items-center justify-center"
-                onClick={() => {
-                  const v = videoRef.current;
-                  if (v && document.pictureInPictureEnabled) {
-                    if (document.pictureInPictureElement) {
-                      void document.exitPictureInPicture();
-                    } else {
-                      void v.requestPictureInPicture();
-                    }
-                  }
-                }}
-                aria-label="Picture in picture"
+                className="min-w-[44px] min-h-[44px] text-sm"
+                onClick={closePlayer}
+                aria-label="Exit"
               >
-                PiP
-              </button>
-              <button
-                type="button"
-                className="min-w-[40px] min-h-[40px] text-sm"
-                onClick={() => void toggleFs()}
-                aria-label="Fullscreen"
-              >
-                {isFs ? "⛶" : "⛶"}
+                ⛶
               </button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
 
-      <div className="flex flex-wrap gap-2 items-center px-0">
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={downloading || cached || !!error || loading}
-          loading={downloading}
-          onClick={() => void downloadOffline()}
-        >
-          {cached
-            ? "Downloaded"
-            : downloading
-              ? `Downloading ${dlProgress}%`
-              : "Download for offline"}
-        </Button>
-      </div>
+  return (
+    <div className="space-y-3 select-none" onContextMenu={(e) => e.preventDefault()}>
+      {/* Preview card */}
+      <button
+        type="button"
+        onClick={() => void openPlayer()}
+        className="w-full text-left rounded-2xl overflow-hidden border border-border bg-surface shadow-sm active:scale-[0.99] transition"
+      >
+        <div className="relative w-full aspect-video bg-primary-dark">
+          <Image
+            src="/logo.png"
+            alt=""
+            fill
+            className="object-contain p-8 opacity-90"
+            sizes="(max-width: 768px) 100vw, 640px"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+            <span className="w-16 h-16 rounded-full bg-black/55 text-white flex items-center justify-center text-2xl pl-1">
+              ▶
+            </span>
+          </div>
+        </div>
+        <div className="px-3 py-2.5">
+          <p className="text-sm font-semibold text-text-primary truncate">
+            {material.title}
+          </p>
+          <p className="text-xs text-text-muted">Tap to play fullscreen</p>
+        </div>
+      </button>
+
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full min-h-[44px] md:w-auto"
+        disabled={downloading || cached}
+        loading={downloading}
+        onClick={() => void downloadOffline()}
+      >
+        {cached
+          ? "Downloaded"
+          : downloading
+            ? `Downloading ${dlProgress}%`
+            : "Download for offline"}
+      </Button>
+
+      {error && !open && (
+        <p className="text-sm text-error text-center">{error}</p>
+      )}
+
+      {playerShell}
     </div>
   );
 }
