@@ -41,8 +41,8 @@ const navSections = [
     ],
   },
   {
-    label: "System",
-    items: [{ href: "/admin/settings", label: "Settings" }],
+    label: "Account",
+    items: [{ href: "/admin/profile", label: "Profile" }],
   },
 ];
 

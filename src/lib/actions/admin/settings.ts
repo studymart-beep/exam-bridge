@@ -24,6 +24,7 @@ export async function saveSettings(formData: FormData) {
     if (error) return { success: false as const, error: error.message };
   }
 
+  revalidatePath("/admin/profile");
   revalidatePath("/admin/settings");
   revalidatePath("/subscribe");
   return { success: true as const };

@@ -20,69 +20,63 @@ type MaterialProp = {
   source_type?: string | null;
 };
 
-const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 3;
-const ZOOM_STEP = 0.25;
-
 export default function PDFViewerSecure({
   material,
 }: {
   material: MaterialProp;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const [numPages, setNumPages] = useState(0);
+  const [visiblePage, setVisiblePage] = useState(1);
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [controls, setControls] = useState(true);
   const [zoom, setZoom] = useState(1);
-  const [jumpOpen, setJumpOpen] = useState(false);
-  const [jumpValue, setJumpValue] = useState("");
   const pdfDocRef = useRef<PDFDocumentProxy | null>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartX = useRef<number | null>(null);
+  const rendered = useRef<Set<number>>(new Set());
+  const dataReady = useRef(false);
   const cacheKey = `pdf:${material.id}`;
 
-  const bumpControls = useCallback(() => {
-    setControls(true);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setControls(false), 3000);
-  }, []);
-
-  const renderPage = useCallback(
-    async (pageNum: number, scale: number) => {
+  const renderPageInto = useCallback(
+    async (pageNum: number, container: HTMLDivElement, scale: number) => {
       const doc = pdfDocRef.current;
-      const canvas = canvasRef.current;
-      if (!doc || !canvas) return;
+      if (!doc) return;
+      let canvas = container.querySelector("canvas") as HTMLCanvasElement | null;
+      if (!canvas) {
+        canvas = document.createElement("canvas");
+        container.appendChild(canvas);
+      }
       const pdfPage = await doc.getPage(pageNum);
-      const base = typeof window !== "undefined" ? window.innerWidth - 8 : 360;
+      const baseW =
+        typeof window !== "undefined" ? window.innerWidth : 390;
       const viewport0 = pdfPage.getViewport({ scale: 1 });
-      const fit = (base / viewport0.width) * scale;
+      const fit = (baseW / viewport0.width) * scale;
       const viewport = pdfPage.getViewport({ scale: fit });
       canvas.width = viewport.width;
       canvas.height = viewport.height;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
+      canvas.style.display = "block";
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+      rendered.current.add(pageNum);
     },
     []
   );
 
-  const openPdfData = useCallback(
-    async (data: ArrayBuffer) => {
-      const pdfjs = await import("pdfjs-dist");
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
-      const doc = await pdfjs.getDocument({ data: new Uint8Array(data) }).promise;
-      pdfDocRef.current = doc;
-      setNumPages(doc.numPages);
-      setPage(1);
-      await renderPage(1, zoom);
-    },
-    [renderPage, zoom]
-  );
+  const openPdfData = useCallback(async (data: ArrayBuffer) => {
+    const pdfjs = await import("pdfjs-dist");
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(data) }).promise;
+    pdfDocRef.current = doc;
+    setNumPages(doc.numPages);
+    dataReady.current = true;
+    rendered.current.clear();
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,16 +109,13 @@ export default function PDFViewerSecure({
   async function openReader() {
     setOpen(true);
     document.body.style.overflow = "hidden";
-    bumpControls();
     window.history.pushState({ ebPdfFs: true }, "");
     if (!pdfDocRef.current) await load();
-    else await renderPage(page, zoom);
   }
 
   function closeReader() {
     setOpen(false);
     document.body.style.overflow = "";
-    setJumpOpen(false);
   }
 
   useEffect(() => {
@@ -143,36 +134,68 @@ export default function PDFViewerSecure({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Lazy render + visible page tracking
   useEffect(() => {
-    if (open && pdfDocRef.current) void renderPage(page, zoom);
-  }, [page, zoom, open, renderPage]);
+    if (!open || !numPages || !pdfDocRef.current) return;
+
+    const root = scrollRef.current;
+    if (!root) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const n = Number((entry.target as HTMLElement).dataset.page);
+          if (!n) continue;
+          if (entry.isIntersecting && !rendered.current.has(n)) {
+            const el = entry.target as HTMLDivElement;
+            void renderPageInto(n, el, zoom);
+          }
+        }
+        // pick most visible for badge
+        let best = 1;
+        let bestRatio = 0;
+        for (const entry of entries) {
+          const n = Number((entry.target as HTMLElement).dataset.page);
+          if (entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio;
+            best = n;
+          }
+        }
+        if (bestRatio > 0) setVisiblePage(best);
+      },
+      { root, rootMargin: "200px 0px", threshold: [0, 0.25, 0.5, 0.75] }
+    );
+
+    pageRefs.current.forEach((el) => io.observe(el));
+
+    // render first few immediately
+    for (let i = 1; i <= Math.min(3, numPages); i++) {
+      const el = pageRefs.current.get(i);
+      if (el) void renderPageInto(i, el, zoom);
+    }
+
+    return () => io.disconnect();
+  }, [open, numPages, zoom, renderPageInto]);
+
+  // re-render all when zoom changes
+  useEffect(() => {
+    if (!open || !numPages) return;
+    rendered.current.clear();
+    for (let i = 1; i <= numPages; i++) {
+      const el = pageRefs.current.get(i);
+      if (el) {
+        el.innerHTML = "";
+        void renderPageInto(i, el, zoom);
+      }
+    }
+  }, [zoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
       setActiveCacheKey(null);
       document.body.style.overflow = "";
-      if (hideTimer.current) clearTimeout(hideTimer.current);
     };
   }, []);
-
-  function goPage(n: number) {
-    setPage(Math.min(Math.max(1, n), numPages || 1));
-    bumpControls();
-  }
-
-  function onTouchStart(e: React.TouchEvent) {
-    touchStartX.current = e.touches[0]?.clientX ?? null;
-    bumpControls();
-  }
-
-  function onTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current == null) return;
-    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(dx) < 60) return;
-    if (dx < 0) goPage(page + 1);
-    else goPage(page - 1);
-  }
 
   async function downloadOffline() {
     setDownloading(true);
@@ -246,14 +269,17 @@ export default function PDFViewerSecure({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[200] w-[100vw] h-[100dvh] bg-[#0A0A0A] flex flex-col" style={{ width: "100vw", height: "100dvh" }}>
+        <div
+          className="fixed inset-0 z-[200] bg-[#0A0A0A] flex flex-col"
+          style={{ width: "100vw", height: "100dvh" }}
+        >
           {loading && (
-            <p className="absolute inset-0 flex items-center justify-center text-white text-sm">
+            <p className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">
               Loading PDF…
             </p>
           )}
           {error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3 p-4">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3 p-4 z-10">
               <p className="text-sm">{error}</p>
               <button
                 type="button"
@@ -265,121 +291,56 @@ export default function PDFViewerSecure({
             </div>
           )}
 
-          <div
-            className="flex-1 w-full h-full overflow-auto flex justify-center items-start"
-            onClick={() => {
-              if (controls) setControls(false);
-              else bumpControls();
-            }}
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-          >
-            <canvas
-              ref={canvasRef}
-              className="w-full max-w-none pointer-events-none block"
-            />
-          </div>
-
-          {/* page badge */}
-          {numPages > 0 && (
-            <div
-              className={cn(
-                "absolute top-3 left-3 z-30 rounded-full bg-black/70 text-white text-xs px-3 py-1.5 transition-opacity",
-                controls ? "opacity-100" : "opacity-0"
-              )}
+          {/* minimal zoom */}
+          <div className="absolute top-3 left-3 z-30 flex gap-1">
+            <button
+              type="button"
+              className="min-w-[40px] min-h-[40px] rounded-full bg-black/50 text-white text-sm"
+              onClick={() => setZoom((z) => Math.max(0.75, z - 0.25))}
             >
-              {page} / {numPages}
-            </div>
-          )}
+              −
+            </button>
+            <button
+              type="button"
+              className="min-w-[40px] min-h-[40px] rounded-full bg-black/50 text-white text-sm"
+              onClick={() => setZoom((z) => Math.min(2.5, z + 0.25))}
+            >
+              +
+            </button>
+          </div>
 
           <button
             type="button"
-            className={cn(
-              "absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg transition-opacity",
-              controls ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}
+            className="absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg"
             onClick={closeReader}
             aria-label="Close"
           >
             ✕
           </button>
 
-          <div
-            className={cn(
-              "absolute inset-x-0 bottom-0 z-30 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity duration-200",
-              controls ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}
-          >
-            <div className="rounded-2xl bg-black/80 backdrop-blur border border-white/10 px-2 py-2 text-white flex flex-wrap items-center justify-center gap-1">
-              <button
-                type="button"
-                className="min-h-[44px] min-w-[44px] disabled:opacity-40"
-                disabled={page <= 1}
-                onClick={() => goPage(page - 1)}
-              >
-                ◀
-              </button>
-              <span className="text-sm tabular-nums px-2">
-                {page} / {numPages || "—"}
+          {numPages > 0 && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+              <span className="text-[11px] font-medium text-white/90 bg-black/55 px-2 py-1.5 rounded-full tabular-nums">
+                {visiblePage} / {numPages}
               </span>
-              <button
-                type="button"
-                className="min-h-[44px] min-w-[44px] disabled:opacity-40"
-                disabled={page >= numPages}
-                onClick={() => goPage(page + 1)}
-              >
-                ▶
-              </button>
-              <button
-                type="button"
-                className="min-h-[44px] min-w-[44px]"
-                onClick={() => setZoom((z) => Math.max(ZOOM_MIN, z - ZOOM_STEP))}
-              >
-                −
-              </button>
-              <button
-                type="button"
-                className="min-h-[44px] min-w-[44px]"
-                onClick={() => setZoom((z) => Math.min(ZOOM_MAX, z + ZOOM_STEP))}
-              >
-                +
-              </button>
-              <button
-                type="button"
-                className="min-h-[44px] px-2 text-sm"
-                onClick={() => setJumpOpen((v) => !v)}
-              >
-                Jump
-              </button>
             </div>
-            {jumpOpen && (
-              <form
-                className="mt-2 flex gap-2 justify-center"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const n = parseInt(jumpValue, 10);
-                  if (!isNaN(n)) goPage(n);
-                  setJumpOpen(false);
-                  setJumpValue("");
+          )}
+
+          <div
+            ref={scrollRef}
+            className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden"
+          >
+            {Array.from({ length: numPages }, (_, i) => i + 1).map((n) => (
+              <div
+                key={n}
+                data-page={n}
+                ref={(el) => {
+                  if (el) pageRefs.current.set(n, el);
+                  else pageRefs.current.delete(n);
                 }}
-              >
-                <input
-                  type="number"
-                  min={1}
-                  max={numPages || 1}
-                  value={jumpValue}
-                  onChange={(e) => setJumpValue(e.target.value)}
-                  className="w-20 h-11 px-2 rounded-lg bg-white/10 text-white text-sm border border-white/20"
-                  placeholder="Page"
-                />
-                <button
-                  type="submit"
-                  className="h-11 px-4 rounded-lg bg-primary text-sm font-medium text-white"
-                >
-                  Go
-                </button>
-              </form>
-            )}
+                className="w-full min-h-[40vh] flex justify-center bg-[#0A0A0A]"
+              />
+            ))}
           </div>
         </div>
       )}

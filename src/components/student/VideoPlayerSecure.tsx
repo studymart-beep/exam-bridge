@@ -115,22 +115,19 @@ export default function VideoPlayerSecure({
       const el = containerRef.current;
       if (!el) return;
       const afterFs = () => {
+        // Allow natural portrait/landscape rotation (YouTube-style).
+        // Best-effort unlock so the OS is not stuck in one orientation.
         try {
           const orient = screen.orientation as ScreenOrientation & {
+            unlock?: () => void;
             lock?: (o: string) => Promise<void>;
           };
+          orient?.unlock?.();
           if (orient?.lock) {
-            void orient.lock("landscape").catch(() => {
-              setRotateHint(true);
-              setTimeout(() => setRotateHint(false), 2000);
-            });
-          } else {
-            setRotateHint(true);
-            setTimeout(() => setRotateHint(false), 2000);
+            void orient.lock("any").catch(() => undefined);
           }
         } catch {
-          setRotateHint(true);
-          setTimeout(() => setRotateHint(false), 2000);
+          /* ignore */
         }
         bumpControls();
       };
@@ -375,13 +372,7 @@ export default function VideoPlayerSecure({
             : "w-full h-full"
       )}
     >
-      {rotateHint && (
-        <div className="absolute top-14 inset-x-0 z-40 flex justify-center pointer-events-none">
-          <span className="text-xs bg-black/70 text-white px-3 py-1.5 rounded-full">
-            Rotate your phone for best view
-          </span>
-        </div>
-      )}
+      
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">
           Loading…
