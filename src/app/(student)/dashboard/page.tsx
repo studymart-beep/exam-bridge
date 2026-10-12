@@ -189,7 +189,7 @@ export default async function DashboardPage() {
             priority
             sizes="(max-width: 1024px) 100vw, 1200px"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/90 via-primary-dark/70 to-primary/40" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-dark/95 via-primary/75 to-accent-dark/50" />
           <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
             <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-white">
               Welcome back, {firstName}
@@ -215,15 +215,19 @@ export default async function DashboardPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { n: subjectsCount, l: "Subjects" },
-            { n: `${avgProgress}%`, l: "Avg Progress" },
-            { n: attempts, l: "CBT Attempts" },
-            { n: daysLeft !== null ? daysLeft : "—", l: "Days Left" },
+            { n: subjectsCount, l: "Subjects", bg: "bg-primary-light/60 border-primary/20", icon: "📚" },
+            { n: `${avgProgress}%`, l: "Avg Progress", bg: "bg-accent-light/70 border-accent/30", icon: "📈" },
+            { n: attempts, l: "CBT Attempts", bg: "bg-sky-50 border-sky-200", icon: "✍️" },
+            { n: daysLeft !== null ? daysLeft : "—", l: "Days Left", bg: "bg-amber-50 border-amber-200", icon: "⏳" },
           ].map((s) => (
-            <Card key={s.l} className="text-center py-4">
+            <div
+              key={s.l}
+              className={`text-center py-4 rounded-2xl border shadow-sm ${s.bg}`}
+            >
+              <div className="text-lg mb-1">{s.icon}</div>
               <p className="font-heading text-xl font-bold text-primary">{s.n}</p>
-              <p className="text-xs text-text-muted mt-0.5">{s.l}</p>
-            </Card>
+              <p className="text-xs text-text-secondary mt-0.5">{s.l}</p>
+            </div>
           ))}
         </div>
 
@@ -313,7 +317,7 @@ export default async function DashboardPage() {
 
         {/* Newly added subjects */}
         {recentSubjects.length > 0 && (
-          <div className="rounded-2xl bg-primary-light/40 border-l-4 border-accent p-4">
+          <div className="rounded-2xl bg-green-50 border border-primary/25 border-l-4 border-l-accent p-4 shadow-sm">
             <h2 className="font-heading font-semibold text-text-primary mb-3 flex items-center gap-2">
               Newly Added
               <span className="text-[10px] font-bold uppercase tracking-wide bg-secondary text-primary-dark px-2 py-0.5 rounded-full">
@@ -377,14 +381,22 @@ export default async function DashboardPage() {
 
         {/* Quick tiles */}
         <div className="grid grid-cols-2 gap-3">
-          {quickTiles.map((t) => (
+          {[
+            { ...quickTiles[0], iconBg: "bg-primary-light text-primary", icon: "📖" },
+            { ...quickTiles[1], iconBg: "bg-accent-light text-accent-dark", icon: "📝" },
+            { ...quickTiles[2], iconBg: "bg-sky-100 text-sky-700", icon: "📊" },
+            { ...quickTiles[3], iconBg: "bg-amber-50 text-amber-700", icon: "🏆" },
+          ].map((tile) => (
             <Link
-              key={t.href}
-              href={t.href}
-              className="rounded-2xl border border-border bg-surface p-4 hover:border-primary/30 min-h-[88px]"
+              key={tile.href}
+              href={tile.href}
+              className="rounded-2xl border border-amber-100 bg-surface p-4 hover:border-primary/30 min-h-[88px] shadow-sm"
             >
-              <p className="text-sm font-semibold text-text-primary">{t.label}</p>
-              <p className="text-xs text-text-muted mt-0.5">{t.sub}</p>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm mb-2 ${tile.iconBg}`}>
+                {tile.icon}
+              </div>
+              <p className="text-sm font-semibold text-text-primary">{tile.label}</p>
+              <p className="text-xs text-text-muted mt-0.5">{tile.sub}</p>
             </Link>
           ))}
         </div>
@@ -392,7 +404,7 @@ export default async function DashboardPage() {
         {/* Activity */}
         {activity.length > 0 && (
           <div>
-            <h2 className="font-heading font-semibold text-text-primary mb-2">
+            <h2 className="font-heading font-semibold text-primary mb-2 pl-2 border-l-4 border-accent">
               Recent Activity
             </h2>
             <Card className="space-y-2">

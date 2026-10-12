@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
             priority
             sizes="(max-width: 1024px) 100vw, 1200px"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/90 via-primary-dark/70 to-primary/40" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-dark/95 via-primary/75 to-accent-dark/50" />
           <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
             <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-white">
               Welcome back, Admin
@@ -74,15 +74,19 @@ export default async function AdminDashboardPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { n: stats.students, l: "Students" },
-            { n: stats.activeSubs, l: "Active Subs" },
-            { n: stats.pendingPayments, l: "Pending Pay" },
-            { n: stats.subjects, l: "Subjects" },
+            { n: stats.students, l: "Students", bg: "bg-primary-light/60 border-primary/20", icon: "👥" },
+            { n: stats.activeSubs, l: "Active Subs", bg: "bg-accent-light/70 border-accent/30", icon: "✓" },
+            { n: stats.pendingPayments, l: "Pending Pay", bg: "bg-sky-50 border-sky-200", icon: "₦" },
+            { n: stats.subjects, l: "Subjects", bg: "bg-amber-50 border-amber-200", icon: "📚" },
           ].map((s) => (
-            <Card key={s.l} className="text-center py-4">
+            <div
+              key={s.l}
+              className={`text-center py-4 rounded-2xl border shadow-sm ${s.bg}`}
+            >
+              <div className="text-lg mb-1">{s.icon}</div>
               <p className="font-heading text-xl font-bold text-primary">{s.n}</p>
-              <p className="text-xs text-text-muted mt-0.5">{s.l}</p>
-            </Card>
+              <p className="text-xs text-text-secondary mt-0.5">{s.l}</p>
+            </div>
           ))}
         </div>
 
@@ -103,7 +107,7 @@ export default async function AdminDashboardPage() {
                 cy="50"
                 r="40"
                 fill="none"
-                className="text-primary"
+                className="text-accent"
                 stroke="currentColor"
                 strokeWidth="8"
                 strokeLinecap="round"
@@ -150,7 +154,7 @@ export default async function AdminDashboardPage() {
         </Card>
 
         {recentSubjects.length > 0 && (
-          <div className="rounded-2xl bg-primary-light/40 border-l-4 border-accent p-4">
+          <div className="rounded-2xl bg-green-50 border border-primary/25 border-l-4 border-l-accent p-4 shadow-sm">
             <h2 className="font-heading font-semibold mb-3 flex items-center gap-2">
               Newly Added
               <span className="text-[10px] font-bold uppercase tracking-wide bg-secondary text-primary-dark px-2 py-0.5 rounded-full">
@@ -206,18 +210,21 @@ export default async function AdminDashboardPage() {
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { href: "/admin/users", label: "Students", sub: "Manage accounts" },
-            { href: "/admin/payments", label: "Payments", sub: "Approvals" },
-            { href: "/admin/subjects", label: "Subjects", sub: "Content" },
-            { href: "/admin/reports", label: "Reports", sub: "Insights" },
-          ].map((t) => (
+            { href: "/admin/users", label: "Students", sub: "Manage accounts", iconBg: "bg-primary-light text-primary", icon: "👥" },
+            { href: "/admin/payments", label: "Payments", sub: "Approvals", iconBg: "bg-accent-light text-accent-dark", icon: "₦" },
+            { href: "/admin/subjects", label: "Subjects", sub: "Content", iconBg: "bg-sky-100 text-sky-700", icon: "📚" },
+            { href: "/admin/reports", label: "Reports", sub: "Insights", iconBg: "bg-amber-50 text-amber-700", icon: "📊" },
+          ].map((tile) => (
             <Link
-              key={t.href}
-              href={t.href}
-              className="rounded-2xl border border-border bg-surface p-4 min-h-[88px]"
+              key={tile.href}
+              href={tile.href}
+              className="rounded-2xl border border-amber-100 bg-surface p-4 min-h-[88px] shadow-sm"
             >
-              <p className="text-sm font-semibold">{t.label}</p>
-              <p className="text-xs text-text-muted mt-0.5">{t.sub}</p>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm mb-2 ${tile.iconBg}`}>
+                {tile.icon}
+              </div>
+              <p className="text-sm font-semibold">{tile.label}</p>
+              <p className="text-xs text-text-muted mt-0.5">{tile.sub}</p>
             </Link>
           ))}
         </div>

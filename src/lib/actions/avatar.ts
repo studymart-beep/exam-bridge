@@ -18,9 +18,8 @@ export type AvatarUploadResult =
 export async function getAvatarUploadUrl(
   contentType: string
 ): Promise<AvatarUploadResult> {
-  if (!ALLOWED.includes(contentType)) {
-    return { error: "Only JPEG, PNG or WebP allowed" };
-  }
+  // Cropped output is always JPEG
+  const type = ALLOWED.includes(contentType) ? contentType : "image/jpeg";
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,12 +27,8 @@ export async function getAvatarUploadUrl(
   if (!user) return { error: "Not signed in" };
 
   const ext =
-    contentType === "image/png"
-      ? "png"
-      : contentType === "image/webp"
-        ? "webp"
-        : "jpg";
-  const path = `${user.id}/avatar.${ext}`;
+    type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+  const path = `${user.id}/${Date.now()}.${ext}`;
 
   const admin = createAdminClient();
   const { data, error } = await admin.storage
@@ -48,7 +43,7 @@ export async function getAvatarUploadUrl(
     path,
     token: data.token,
     signedUrl: data.signedUrl,
-    contentType,
+    contentType: type,
   };
 }
 

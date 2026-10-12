@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PDFDocumentProxy } from "pdfjs-dist";
+import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
@@ -34,11 +34,12 @@ export default function PDFViewerSecure({
   const [downloading, setDownloading] = useState(false);
   const [open, setOpen] = useState(false);
   const [controls, setControls] = useState(true);
+  const [rotateHint, setRotateHint] = useState(false);
   const pdfDocRef = useRef<PDFDocumentProxy | null>(null);
   const rendered = useRef<Set<number>>(new Set());
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTap = useRef(0);
   const cacheKey = `pdf:${material.id}`;
+  const scrollRatioRef = useRef(0);
 
   const bumpControls = useCallback(() => {
     setControls(true);
@@ -50,28 +51,41 @@ export default function PDFViewerSecure({
     async (pageNum: number, container: HTMLDivElement) => {
       const doc = pdfDocRef.current;
       if (!doc) return;
+
+      const pdfPage: PDFPageProxy = await doc.getPage(pageNum);
+      // Use page's natural rotation only — no extra transforms
+      const baseViewport = pdfPage.getViewport({ scale: 1 });
+      const cssWidth = container.clientWidth || window.innerWidth || 390;
+      const cssScale = cssWidth / baseViewport.width;
+      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+      const scaledViewport = pdfPage.getViewport({ scale: cssScale * dpr });
+
       let canvas = container.querySelector("canvas") as HTMLCanvasElement | null;
       if (!canvas) {
         canvas = document.createElement("canvas");
         container.appendChild(canvas);
       }
-      const pdfPage = await doc.getPage(pageNum);
-      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
-      const baseW = typeof window !== "undefined" ? window.innerWidth : 390;
-      const viewport0 = pdfPage.getViewport({ scale: 1 });
-      const fit = baseW / viewport0.width;
-      const viewport = pdfPage.getViewport({ scale: fit * dpr });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width = "100%";
-      canvas.style.height = "auto";
+
+      canvas.width = Math.floor(scaledViewport.width);
+      canvas.height = Math.floor(scaledViewport.height);
+      canvas.style.width = `${Math.floor(scaledViewport.width / dpr)}px`;
+      canvas.style.height = `${Math.floor(scaledViewport.height / dpr)}px`;
       canvas.style.display = "block";
+      canvas.style.margin = "0 auto";
       canvas.style.background = "#FFFFFF";
-      const ctx = canvas.getContext("2d");
+      // no filters / transforms
+
+      const ctx = canvas.getContext("2d", { alpha: false });
       if (!ctx) return;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+
+      await pdfPage.render({
+        canvasContext: ctx,
+        viewport: scaledViewport,
+      }).promise;
+
       rendered.current.add(pageNum);
     },
     []
@@ -119,26 +133,15 @@ export default function PDFViewerSecure({
     document.body.style.overflow = "hidden";
     window.history.pushState({ ebPdfFs: true }, "");
     bumpControls();
+    setRotateHint(true);
+    setTimeout(() => setRotateHint(false), 2000);
     if (!pdfDocRef.current) await load();
   }
 
   function closeReader() {
     setOpen(false);
     document.body.style.overflow = "";
-  }
-
-  async function toggleOrientation() {
-    try {
-      const orient = screen.orientation as ScreenOrientation & {
-        lock?: (o: string) => Promise<void>;
-        type?: string;
-      };
-      const type = orient?.type || "";
-      if (type.includes("landscape")) await orient.lock?.("portrait");
-      else await orient.lock?.("landscape");
-    } catch {
-      /* not supported */
-    }
+    setRotateHint(false);
   }
 
   useEffect(() => {
@@ -157,6 +160,7 @@ export default function PDFViewerSecure({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Lazy render + visible page
   useEffect(() => {
     if (!open || !numPages || !pdfDocRef.current) return;
     const root = scrollRef.current;
@@ -182,16 +186,47 @@ export default function PDFViewerSecure({
         }
         if (bestRatio > 0) setVisiblePage(best);
       },
-      { root, rootMargin: "200px 0px", threshold: [0, 0.25, 0.5, 0.75] }
+      { root, rootMargin: "300px 0px", threshold: [0, 0.2, 0.5, 0.8] }
     );
 
     pageRefs.current.forEach((el) => io.observe(el));
-    for (let i = 1; i <= Math.min(3, numPages); i++) {
+    for (let i = 1; i <= Math.min(2, numPages); i++) {
       const el = pageRefs.current.get(i);
       if (el) void renderPageInto(i, el);
     }
     return () => io.disconnect();
   }, [open, numPages, renderPageInto]);
+
+  // Re-render all visible pages on orientation / resize
+  useEffect(() => {
+    if (!open) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      const root = scrollRef.current;
+      if (root && root.scrollHeight > 0) {
+        scrollRatioRef.current = root.scrollTop / root.scrollHeight;
+      }
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        rendered.current.clear();
+        pageRefs.current.forEach((el, n) => {
+          el.innerHTML = "";
+          void renderPageInto(n, el);
+        });
+        requestAnimationFrame(() => {
+          const r = scrollRef.current;
+          if (r) r.scrollTop = scrollRatioRef.current * r.scrollHeight;
+        });
+      }, 150);
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+      if (timer) clearTimeout(timer);
+    };
+  }, [open, renderPageInto]);
 
   useEffect(() => {
     return () => {
@@ -230,13 +265,6 @@ export default function PDFViewerSecure({
     }
   }
 
-  function onSurfaceTap() {
-    const now = Date.now();
-    // single or double tap both just show controls
-    lastTap.current = now;
-    bumpControls();
-  }
-
   return (
     <div className="space-y-3 select-none" onContextMenu={(e) => e.preventDefault()}>
       <button
@@ -273,8 +301,8 @@ export default function PDFViewerSecure({
 
       {open && (
         <div
-          className="fixed inset-0 z-[100] flex flex-col"
-          style={{ width: "100vw", height: "100dvh", background: "#0A0A0A" }}
+          className="fixed inset-0 z-[100] flex flex-col bg-[#0A0A0A]"
+          style={{ width: "100vw", height: "100dvh" }}
         >
           {loading && (
             <p className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">
@@ -294,7 +322,14 @@ export default function PDFViewerSecure({
             </div>
           )}
 
-          {/* Close only top-right */}
+          {rotateHint && (
+            <div className="absolute top-14 inset-x-0 z-40 flex justify-center pointer-events-none">
+              <span className="text-xs bg-black/75 text-white px-3 py-1.5 rounded-full max-w-[90%] text-center">
+                Rotate your phone to switch between portrait and landscape
+              </span>
+            </div>
+          )}
+
           <button
             type="button"
             className={cn(
@@ -308,34 +343,22 @@ export default function PDFViewerSecure({
           </button>
 
           {numPages > 0 && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+            <div
+              className={cn(
+                "absolute right-2 top-1/2 -translate-y-1/2 z-30 pointer-events-none transition-opacity",
+                controls ? "opacity-100" : "opacity-40"
+              )}
+            >
               <span className="text-[11px] font-medium text-white/90 bg-black/55 px-2 py-1.5 rounded-full tabular-nums">
                 {visiblePage} / {numPages}
               </span>
             </div>
           )}
 
-          {/* Bottom center: rotate only */}
-          <div
-            className={cn(
-              "absolute bottom-0 inset-x-0 z-30 flex justify-center pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity",
-              controls ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}
-          >
-            <button
-              type="button"
-              className="min-w-[52px] min-h-[44px] rounded-full bg-black/70 text-white text-lg px-5 border border-white/15"
-              onClick={() => void toggleOrientation()}
-              aria-label="Rotate"
-            >
-              ↻
-            </button>
-          </div>
-
           <div
             ref={scrollRef}
             className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden bg-[#0A0A0A]"
-            onClick={onSurfaceTap}
+            onClick={bumpControls}
           >
             {Array.from({ length: numPages }, (_, i) => i + 1).map((n) => (
               <div
@@ -345,7 +368,7 @@ export default function PDFViewerSecure({
                   if (el) pageRefs.current.set(n, el);
                   else pageRefs.current.delete(n);
                 }}
-                className="w-full min-h-[30vh] flex justify-center bg-white"
+                className="w-full bg-white flex justify-center"
               />
             ))}
           </div>
