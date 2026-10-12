@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline — Exam Bridge</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Inter, system-ui, sans-serif;
+        background: #fffbeb;
+        color: #052e16;
+        text-align: center;
+        padding: 24px;
+      }
+      .card {
+        max-width: 360px;
+      }
+      h1 {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        font-size: 1.25rem;
+        margin: 16px 0 8px;
+      }
+      p {
+        color: #3f6212;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      a {
+        display: inline-block;
+        margin-top: 16px;
+        color: #166534;
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 28 C12 14, 52 14, 52 28" stroke="#EAB308" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+        <path d="M18 28 V35 M32 18 V35 M46 28 V35" stroke="#CA8A04" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M8 37 C8 37, 32 32, 32 37 C32 32, 56 37, 56 37 L56 54 C56 54, 32 49, 32 54 C32 49, 8 54, 8 54 Z" fill="#166534"/>
+        <path d="M32 37 V54" stroke="#14532D" stroke-width="2"/>
+        <path d="M30 37 L32 42 L34 37 Z" fill="#FACC15"/>
+      </svg>
+      <h1>You're offline</h1>
+      <p>Some content may not be available. Check your connection and try again.</p>
+      <a href="/dashboard">Retry</a>
+    </div>
+  </body>
+</html>
