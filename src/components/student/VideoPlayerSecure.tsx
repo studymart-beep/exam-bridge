@@ -54,6 +54,7 @@ export default function VideoPlayerSecure({
   const [dlProgress, setDlProgress] = useState(0);
   const [open, setOpen] = useState(false);
   const [iosFs, setIosFs] = useState(false);
+  const [rotateHint, setRotateHint] = useState(false);
 
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -110,20 +111,43 @@ export default function VideoPlayerSecure({
   async function openPlayer() {
     setOpen(true);
     if (!url) await loadUrl();
-    // try native fullscreen
     requestAnimationFrame(() => {
       const el = containerRef.current;
       if (!el) return;
+      const afterFs = () => {
+        try {
+          const orient = screen.orientation as ScreenOrientation & {
+            lock?: (o: string) => Promise<void>;
+          };
+          if (orient?.lock) {
+            void orient.lock("landscape").catch(() => {
+              setRotateHint(true);
+              setTimeout(() => setRotateHint(false), 2000);
+            });
+          } else {
+            setRotateHint(true);
+            setTimeout(() => setRotateHint(false), 2000);
+          }
+        } catch {
+          setRotateHint(true);
+          setTimeout(() => setRotateHint(false), 2000);
+        }
+        bumpControls();
+      };
       if (typeof el.requestFullscreen === "function") {
-        void el.requestFullscreen().catch(() => {
-          setIosFs(true);
-          document.body.style.overflow = "hidden";
-        });
+        void el
+          .requestFullscreen()
+          .then(afterFs)
+          .catch(() => {
+            setIosFs(true);
+            document.body.style.overflow = "hidden";
+            afterFs();
+          });
       } else {
         setIosFs(true);
         document.body.style.overflow = "hidden";
+        afterFs();
       }
-      bumpControls();
     });
   }
 
@@ -136,7 +160,16 @@ export default function VideoPlayerSecure({
     if (document.fullscreenElement) {
       void document.exitFullscreen().catch(() => undefined);
     }
+    try {
+      const orient = screen.orientation as ScreenOrientation & {
+        unlock?: () => void;
+      };
+      orient?.unlock?.();
+    } catch {
+      /* ignore */
+    }
     setIosFs(false);
+    setRotateHint(false);
     document.body.style.overflow = "";
     setOpen(false);
     setSpeedMenu(false);
@@ -335,11 +368,20 @@ export default function VideoPlayerSecure({
       ref={containerRef}
       className={cn(
         "bg-black z-[200] flex flex-col",
-        iosFs
+        iosFs || isFs
           ? "fixed inset-0 w-[100vw] h-[100dvh]"
-          : "w-full h-full"
+          : open
+            ? "fixed inset-0 w-[100vw] h-[100dvh]"
+            : "w-full h-full"
       )}
     >
+      {rotateHint && (
+        <div className="absolute top-14 inset-x-0 z-40 flex justify-center pointer-events-none">
+          <span className="text-xs bg-black/70 text-white px-3 py-1.5 rounded-full">
+            Rotate your phone for best view
+          </span>
+        </div>
+      )}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">
           Loading…

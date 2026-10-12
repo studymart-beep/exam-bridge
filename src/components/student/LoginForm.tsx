@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { signInStudent } from "@/app/actions/auth";
@@ -27,17 +26,23 @@ export default function LoginForm() {
       {error && (
         <div className="p-3 rounded-xl bg-red-50 text-error text-sm">{error}</div>
       )}
-      <Input name="email" type="email" label="Email" placeholder="you@email.com" required />
-      <Input name="password" type="password" label="Password" placeholder="••••••••" required />
+      <Input
+        name="email"
+        type="email"
+        label="Email"
+        placeholder="you@email.com"
+        required
+      />
+      <Input
+        name="password"
+        type="password"
+        label="Password"
+        placeholder="••••••••"
+        required
+      />
       <Button type="submit" fullWidth loading={loading}>
         Log in
       </Button>
-      <p className="text-center text-sm text-text-muted">
-        No account?{" "}
-        <Link href="/register" className="text-primary font-medium hover:underline">
-          Register
-        </Link>
-      </p>
     </form>
   );
 }

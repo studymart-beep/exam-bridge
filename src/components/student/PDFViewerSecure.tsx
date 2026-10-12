@@ -246,7 +246,7 @@ export default function PDFViewerSecure({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[200] bg-[#1A1A1A] flex flex-col">
+        <div className="fixed inset-0 z-[200] w-[100vw] h-[100dvh] bg-[#0A0A0A] flex flex-col" style={{ width: "100vw", height: "100dvh" }}>
           {loading && (
             <p className="absolute inset-0 flex items-center justify-center text-white text-sm">
               Loading PDF…
@@ -266,7 +266,7 @@ export default function PDFViewerSecure({
           )}
 
           <div
-            className="flex-1 overflow-auto"
+            className="flex-1 w-full h-full overflow-auto flex justify-center items-start"
             onClick={() => {
               if (controls) setControls(false);
               else bumpControls();
@@ -276,7 +276,7 @@ export default function PDFViewerSecure({
           >
             <canvas
               ref={canvasRef}
-              className="mx-auto max-w-full pointer-events-none"
+              className="w-full max-w-none pointer-events-none block"
             />
           </div>
 

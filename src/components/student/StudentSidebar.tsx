@@ -22,7 +22,6 @@ const mainNav = [
 
 const secondaryNav = [
   { href: "/notifications", label: "Notifications" },
-  { href: "/settings", label: "Settings" },
   { href: "/subscribe", label: "Subscribe" },
 ];
 
@@ -41,7 +40,9 @@ export default function StudentSidebar({
       <div
         className={cn(
           "fixed inset-0 z-40 bg-text-primary/40 transition-opacity duration-200 lg:hidden",
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          open
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
         aria-hidden
@@ -54,7 +55,11 @@ export default function StudentSidebar({
         )}
       >
         <div className="p-4 border-b border-border flex items-center justify-between gap-2">
-          <Link href="/dashboard" className="flex items-center gap-2 min-w-0" onClick={onClose}>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 min-w-0"
+            onClick={onClose}
+          >
             <Logo size={28} />
             <div className="min-w-0">
               <p className="font-heading font-bold text-primary text-sm leading-tight">
@@ -70,63 +75,48 @@ export default function StudentSidebar({
             aria-label="Close menu"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-4">
-          <div>
-            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-              Menu
-            </p>
-            <ul className="space-y-0.5">
-              {mainNav.map((item) => {
-                const active = isActive(item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className={cn(
-                        "block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center",
-                        active
-                          ? "bg-primary-light text-primary"
-                          : "text-text-secondary hover:bg-accent-light/70 hover:text-primary"
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          <div>
-            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-              Account
-            </p>
-            <ul className="space-y-0.5">
-              {secondaryNav.map((item) => {
-                const active = isActive(item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className={cn(
-                        "block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] flex items-center",
-                        active
-                          ? "bg-primary-light text-primary"
-                          : "text-text-secondary hover:bg-accent-light/70 hover:text-primary"
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {mainNav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              className={cn(
+                "flex items-center min-h-[44px] px-3 rounded-xl text-sm font-medium transition-colors",
+                isActive(item.href)
+                  ? "bg-primary-light text-primary"
+                  : "text-text-secondary hover:bg-primary-light/60 hover:text-primary"
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <div className="pt-3 mt-2 border-t border-border space-y-1">
+            {secondaryNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={cn(
+                  "flex items-center min-h-[44px] px-3 rounded-xl text-sm font-medium transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary-light text-primary"
+                    : "text-text-secondary hover:bg-primary-light/60 hover:text-primary"
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         </nav>
       </aside>
