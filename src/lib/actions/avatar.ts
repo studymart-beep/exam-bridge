@@ -5,17 +5,27 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
-const MAX = 2 * 1024 * 1024;
 
-export async function getAvatarUploadUrl(contentType: string) {
+export type AvatarUploadResult =
+  | {
+      path: string;
+      token: string;
+      signedUrl: string;
+      contentType: string;
+    }
+  | { error: string };
+
+export async function getAvatarUploadUrl(
+  contentType: string
+): Promise<AvatarUploadResult> {
   if (!ALLOWED.includes(contentType)) {
-    return { error: "Only JPEG, PNG or WebP allowed" as const };
+    return { error: "Only JPEG, PNG or WebP allowed" };
   }
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Not signed in" as const };
+  if (!user) return { error: "Not signed in" };
 
   const ext =
     contentType === "image/png"
@@ -25,14 +35,13 @@ export async function getAvatarUploadUrl(contentType: string) {
         : "jpg";
   const path = `${user.id}/avatar.${ext}`;
 
-  // TODO: replace with API call when using client-only signed uploads
   const admin = createAdminClient();
   const { data, error } = await admin.storage
     .from("avatars")
     .createSignedUploadUrl(path);
 
   if (error || !data) {
-    return { error: error?.message || "Could not create upload URL" as const };
+    return { error: error?.message ?? "Could not create upload URL" };
   }
 
   return {
@@ -43,15 +52,19 @@ export async function getAvatarUploadUrl(contentType: string) {
   };
 }
 
-export async function finalizeAvatar(path: string) {
+export async function finalizeAvatar(
+  path: string
+): Promise<
+  { success: true; avatarUrl: string } | { success: false; error: string }
+> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { success: false as const, error: "Not signed in" };
+  if (!user) return { success: false, error: "Not signed in" };
 
   if (!path.startsWith(`${user.id}/`)) {
-    return { success: false as const, error: "Invalid path" };
+    return { success: false, error: "Invalid path" };
   }
 
   const admin = createAdminClient();
@@ -66,10 +79,10 @@ export async function finalizeAvatar(path: string) {
     .update({ avatar_url })
     .eq("id", user.id);
 
-  if (error) return { success: false as const, error: error.message };
+  if (error) return { success: false, error: error.message };
 
   revalidatePath("/profile");
   revalidatePath("/admin/profile");
   revalidatePath("/dashboard");
-  return { success: true as const, avatarUrl: avatar_url };
+  return { success: true, avatarUrl: avatar_url };
 }

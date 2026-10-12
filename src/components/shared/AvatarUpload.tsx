@@ -40,7 +40,7 @@ export default function AvatarUpload({
     startTransition(async () => {
       const meta = await getAvatarUploadUrl(file.type);
       if ("error" in meta) {
-        showToast(meta.error, "error");
+        showToast(meta.error ?? "Upload failed", "error");
         return;
       }
       const put = await fetch(meta.signedUrl, {
@@ -54,7 +54,7 @@ export default function AvatarUpload({
       }
       const fin = await finalizeAvatar(meta.path);
       if (!fin.success) {
-        showToast(fin.error, "error");
+        showToast(fin.error ?? "Could not save photo", "error");
         return;
       }
       setPreview(fin.avatarUrl || URL.createObjectURL(file));
