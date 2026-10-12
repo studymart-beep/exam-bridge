@@ -177,7 +177,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <StudentHeader title="Home" userName={profile?.full_name || "Student"} />
+      <StudentHeader title="Home" userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null} />
       <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto space-y-5">
         {/* Hero */}
         <div className="relative w-full h-[200px] md:h-[280px] rounded-2xl overflow-hidden">

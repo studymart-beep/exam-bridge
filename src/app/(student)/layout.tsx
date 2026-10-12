@@ -1,9 +1,19 @@
 import { StudentMenuProvider } from "@/components/student/StudentMenuContext";
+import { getCurrentProfileBrief } from "@/lib/data/profile";
 
-export default function StudentLayout({
+export default async function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <StudentMenuProvider>{children}</StudentMenuProvider>;
+  const brief = await getCurrentProfileBrief();
+
+  return (
+    <StudentMenuProvider
+      userName={brief.fullName}
+      avatarUrl={brief.avatarUrl}
+    >
+      {children}
+    </StudentMenuProvider>
+  );
 }

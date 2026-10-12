@@ -24,7 +24,7 @@ export default async function CbtExamPage({ params }: Props) {
         title={exam.title}
         showBack
         backHref="/cbt"
-        userName={profile?.full_name || "Student"}
+        userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null}
       />
       <div className="px-4 sm:px-6 py-5 max-w-lg mx-auto space-y-4">
         <Card className="space-y-2">

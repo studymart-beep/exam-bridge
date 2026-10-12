@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/brand/Logo";
+import Avatar from "@/components/ui/Avatar";
 
 interface StudentSidebarProps {
   open?: boolean;
   onClose?: () => void;
   userName?: string;
+  avatarUrl?: string | null;
 }
 
 const mainNav = [
@@ -29,20 +31,26 @@ export default function StudentSidebar({
   open = false,
   onClose,
   userName = "Student",
+  avatarUrl = null,
 }: StudentSidebarProps) {
   const pathname = usePathname();
-
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
+
+  const initials =
+    userName
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "ST";
 
   return (
     <>
       <div
         className={cn(
           "fixed inset-0 z-40 bg-text-primary/40 transition-opacity duration-200 lg:hidden",
-          open
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
         aria-hidden
@@ -119,6 +127,22 @@ export default function StudentSidebar({
             ))}
           </div>
         </nav>
+
+        <div className="p-3 border-t border-border">
+          <Link
+            href="/profile"
+            onClick={onClose}
+            className="flex items-center gap-3 min-h-[52px] px-2 rounded-xl hover:bg-primary-light/50"
+          >
+            <Avatar initials={initials} src={avatarUrl} size="md" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text-primary truncate">
+                {userName}
+              </p>
+              <p className="text-xs text-text-muted">View profile</p>
+            </div>
+          </Link>
+        </div>
       </aside>
     </>
   );

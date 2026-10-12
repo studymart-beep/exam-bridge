@@ -1,13 +1,19 @@
 "use client";
 
-import { useAdminMenu } from "@/components/admin/AdminMenuContext";
+import Link from "next/link";
+import Avatar from "@/components/ui/Avatar";
+import {
+  useAdminMenu,
+  useAdminUser,
+} from "@/components/admin/AdminMenuContext";
 
 interface AdminHeaderProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
-  /** Optional; falls back to layout context */
   onMenuClick?: () => void;
+  userName?: string;
+  avatarUrl?: string | null;
 }
 
 export default function AdminHeader({
@@ -15,9 +21,22 @@ export default function AdminHeader({
   subtitle,
   actions,
   onMenuClick,
+  userName,
+  avatarUrl,
 }: AdminHeaderProps) {
   const openFromContext = useAdminMenu();
+  const user = useAdminUser();
   const openSidebar = onMenuClick ?? openFromContext;
+
+  const name = userName || user.fullName || "Admin";
+  const src = avatarUrl !== undefined ? avatarUrl : user.avatarUrl;
+  const initials =
+    name
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "AD";
 
   return (
     <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur border-b border-border">
@@ -38,22 +57,28 @@ export default function AdminHeader({
               {title}
             </h1>
             {subtitle && (
-              <p className="text-xs text-text-muted truncate hidden sm:block">{subtitle}</p>
+              <p className="text-xs text-text-muted truncate hidden sm:block">
+                {subtitle}
+              </p>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
           {actions}
-          <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-border">
-            <div className="w-8 h-8 rounded-full bg-primary text-white text-xs font-semibold flex items-center justify-center">
-              SA
-            </div>
+          <Link
+            href="/admin/profile"
+            className="flex items-center gap-2 pl-2 border-l border-border min-h-[44px]"
+            aria-label="Admin profile"
+          >
+            <Avatar initials={initials} src={src} size="sm" />
             <div className="hidden md:block">
-              <p className="text-sm font-medium text-text-primary leading-tight">Super Admin</p>
+              <p className="text-sm font-medium text-text-primary leading-tight">
+                {name}
+              </p>
               <p className="text-[10px] text-text-muted">Admin panel</p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </header>

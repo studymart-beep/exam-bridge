@@ -4,10 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Logo from "@/components/brand/Logo";
+import Avatar from "@/components/ui/Avatar";
 
 interface AdminSidebarProps {
   open?: boolean;
   onClose?: () => void;
+  userName?: string;
+  avatarUrl?: string | null;
 }
 
 const navSections = [
@@ -46,15 +49,27 @@ const navSections = [
   },
 ];
 
-export default function AdminSidebar({ open = false, onClose }: AdminSidebarProps) {
+export default function AdminSidebar({
+  open = false,
+  onClose,
+  userName = "Admin",
+  avatarUrl = null,
+}: AdminSidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
+  const initials =
+    userName
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "AD";
+
   return (
     <>
-      {/* Backdrop — mobile only */}
       <div
         className={cn(
           "fixed inset-0 z-40 bg-text-primary/40 transition-opacity duration-200 lg:hidden",
@@ -71,13 +86,19 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
         )}
       >
         <div className="p-4 border-b border-border flex items-center justify-between gap-2">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 min-w-0" onClick={onClose}>
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-2 min-w-0"
+            onClick={onClose}
+          >
             <Logo size={40} />
             <div className="min-w-0">
               <p className="font-heading font-bold text-primary text-sm leading-tight truncate">
                 Exam Bridge
               </p>
-              <p className="text-[10px] text-text-muted uppercase tracking-wide">Admin</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wide">
+                Admin
+              </p>
             </div>
           </Link>
           <button
@@ -87,7 +108,12 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
             aria-label="Close menu"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -122,6 +148,22 @@ export default function AdminSidebar({ open = false, onClose }: AdminSidebarProp
             </div>
           ))}
         </nav>
+
+        <div className="p-3 border-t border-border">
+          <Link
+            href="/admin/profile"
+            onClick={onClose}
+            className="flex items-center gap-3 min-h-[52px] px-2 rounded-xl hover:bg-primary-light/50"
+          >
+            <Avatar initials={initials} src={avatarUrl} size="md" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text-primary truncate">
+                {userName}
+              </p>
+              <p className="text-xs text-text-muted">View profile</p>
+            </div>
+          </Link>
+        </div>
       </aside>
     </>
   );

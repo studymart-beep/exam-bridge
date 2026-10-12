@@ -12,7 +12,7 @@ export default async function SubjectsPage() {
 
   return (
     <div>
-      <StudentHeader title="Subjects" userName={profile?.full_name || "Student"} />
+      <StudentHeader title="Subjects" userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null} />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-4">
         {list.length === 0 ? (
           <Card className="text-center py-10">

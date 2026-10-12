@@ -9,6 +9,13 @@ export type Profile = {
   status: "inactive" | "active" | "expired";
   subscription_expires_at: string | null;
   created_at: string;
+  avatar_url?: string | null;
+  state_of_origin?: string | null;
+};
+
+export type ProfileBrief = {
+  fullName: string;
+  avatarUrl: string | null;
 };
 
 export function isSubscriptionActive(profile: Profile | null): boolean {
@@ -42,4 +49,13 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   } catch {
     return null;
   }
+}
+
+/** Lightweight name + avatar for headers/sidebars */
+export async function getCurrentProfileBrief(): Promise<ProfileBrief> {
+  const p = await getCurrentProfile();
+  return {
+    fullName: p?.full_name?.trim() || (p?.role === "admin" ? "Admin" : "Student"),
+    avatarUrl: p?.avatar_url?.trim() || null,
+  };
 }

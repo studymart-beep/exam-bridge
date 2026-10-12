@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
-import { useStudentMenu } from "@/components/student/StudentMenuContext";
+import {
+  useStudentMenu,
+  useStudentUser,
+} from "@/components/student/StudentMenuContext";
 
 interface StudentHeaderProps {
   title?: string;
   showBack?: boolean;
   backHref?: string;
   userName?: string;
+  avatarUrl?: string | null;
   unreadCount?: number;
   onOpenSidebar?: () => void;
 }
@@ -17,15 +21,20 @@ export default function StudentHeader({
   title,
   showBack,
   backHref = "/dashboard",
-  userName = "Student",
+  userName,
+  avatarUrl,
   unreadCount = 0,
   onOpenSidebar,
 }: StudentHeaderProps) {
   const openFromContext = useStudentMenu();
+  const user = useStudentUser();
   const openSidebar = onOpenSidebar ?? openFromContext;
 
+  const name = userName || user.fullName || "Student";
+  const src = avatarUrl !== undefined ? avatarUrl : user.avatarUrl;
+
   const initials =
-    userName
+    name
       .split(" ")
       .map((p) => p[0])
       .join("")
@@ -78,7 +87,7 @@ export default function StudentHeader({
             />
           </svg>
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-error text-white text-[10px] flex items-center justify-center font-bold">
+            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -86,8 +95,9 @@ export default function StudentHeader({
         <Link
           href="/profile"
           className="min-w-[44px] min-h-[44px] flex items-center justify-center"
+          aria-label="Profile"
         >
-          <Avatar initials={initials} size="sm" />
+          <Avatar initials={initials} src={src} size="sm" />
         </Link>
       </div>
     </header>
