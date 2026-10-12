@@ -313,27 +313,31 @@ export default async function DashboardPage() {
 
         {/* Newly added subjects */}
         {recentSubjects.length > 0 && (
-          <div>
-            <h2 className="font-heading font-semibold text-text-primary mb-3">
+          <div className="rounded-2xl bg-primary-light/40 border-l-4 border-accent p-4">
+            <h2 className="font-heading font-semibold text-text-primary mb-3 flex items-center gap-2">
               Newly Added
+              <span className="text-[10px] font-bold uppercase tracking-wide bg-secondary text-primary-dark px-2 py-0.5 rounded-full">
+                NEW
+              </span>
             </h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:overflow-visible">
-              {recentSubjects.map((s) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {recentSubjects.map((s, i) => (
                 <Link
                   key={s.id}
                   href={`/subjects/${s.slug}`}
-                  className="min-w-[140px] md:min-w-0 rounded-2xl border border-border bg-surface p-3 shrink-0 hover:border-primary/30"
+                  className="relative flex items-center gap-3 rounded-xl border border-border bg-surface p-3 hover:border-primary/30"
                 >
-                  <div
-                    className="w-8 h-8 rounded-lg mb-2 text-white text-xs font-bold flex items-center justify-center"
-                    style={{ backgroundColor: s.color || "#166534" }}
-                  >
-                    {s.name[0]}
+                  <span className="w-8 h-8 rounded-full bg-secondary text-primary-dark text-sm font-bold flex items-center justify-center shrink-0">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold line-clamp-1">{s.name}</p>
+                    <p className="text-[10px] text-text-muted">{s.topicCount} topics</p>
                   </div>
-                  <p className="text-sm font-medium line-clamp-2">{s.name}</p>
-                  <p className="text-[10px] text-text-muted mt-1">
-                    {s.topicCount} topics
-                  </p>
+                  <span className="text-[9px] font-bold uppercase bg-accent-light text-accent-dark px-1.5 py-0.5 rounded absolute top-2 right-8">
+                    NEW
+                  </span>
+                  <span className="text-text-muted">›</span>
                 </Link>
               ))}
             </div>

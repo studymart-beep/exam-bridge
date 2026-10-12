@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function updateProfile(input: {
   fullName: string;
   phone: string;
+  stateOfOrigin?: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   try {
     const supabase = await createClient();
@@ -22,6 +23,7 @@ export async function updateProfile(input: {
       .update({
         full_name,
         phone: input.phone.trim() || null,
+        state_of_origin: input.stateOfOrigin?.trim() || null,
       })
       .eq("id", user.id);
 
@@ -52,7 +54,6 @@ export async function changePassword(input: {
       return { success: false, error: "New password must be at least 6 characters" };
     }
 
-    // Re-auth with current password
     const { error: signErr } = await supabase.auth.signInWithPassword({
       email: user.email,
       password: input.currentPassword,

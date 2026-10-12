@@ -14,11 +14,15 @@ import {
 import { saveSettings } from "@/lib/actions/admin/settings";
 import { signOutAdmin } from "@/app/actions/auth";
 import { cn } from "@/lib/utils";
+import AvatarUpload from "@/components/shared/AvatarUpload";
+import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
 
 type Props = {
   fullName: string;
   email: string;
   phone: string;
+  avatarUrl: string | null;
+  stateOfOrigin: string | null;
   stats: {
     students: number;
     activeSubs: number;
@@ -44,6 +48,8 @@ export default function AdminProfileHub({
   fullName,
   email,
   phone,
+  avatarUrl,
+  stateOfOrigin,
   stats,
   settings,
 }: Props) {
@@ -53,6 +59,7 @@ export default function AdminProfileHub({
   const [pwOpen, setPwOpen] = useState(false);
   const [name, setName] = useState(fullName);
   const [phoneVal, setPhoneVal] = useState(phone);
+  const [stateVal, setStateVal] = useState(stateOfOrigin || "");
   const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -64,7 +71,7 @@ export default function AdminProfileHub({
 
   function saveProfile() {
     startTransition(async () => {
-      const res = await updateAdminProfile({ fullName: name, phone: phoneVal });
+      const res = await updateAdminProfile({ fullName: name, phone: phoneVal, stateOfOrigin: stateVal });
       if (!res.success) showToast(res.error, "error");
       else {
         showToast("Profile updated", "success");
@@ -122,18 +129,7 @@ export default function AdminProfileHub({
     <div className="space-y-5 pb-10 max-w-lg mx-auto">
       <div className="rounded-2xl bg-gradient-to-br from-primary-dark via-primary to-primary-dark text-white p-5 shadow-md">
         <div className="flex items-start gap-4">
-          <div className="relative shrink-0">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/15 border-2 border-secondary flex items-center justify-center font-heading font-bold text-xl">
-              {initials(fullName || email || "A")}
-            </div>
-            <button
-              type="button"
-              onClick={() => setEditOpen(true)}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary text-primary-dark text-xs font-bold shadow"
-            >
-              ✎
-            </button>
-          </div>
+<AvatarUpload name={fullName || email || "A"} avatarUrl={avatarUrl} size={80} />
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-lg font-bold truncate">
               {fullName || "Admin"}
@@ -260,6 +256,21 @@ export default function AdminProfileHub({
             value={phoneVal}
             onChange={(e) => setPhoneVal(e.target.value)}
           />
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            State of Origin
+          </label>
+          <select
+            className="w-full h-11 rounded-lg border border-border bg-surface px-3 text-sm"
+            value={stateVal}
+            onChange={(e) => setStateVal(e.target.value)}
+          >
+            <option value="">Not set</option>
+            {NIGERIA_STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setEditOpen(false)}>
               Cancel

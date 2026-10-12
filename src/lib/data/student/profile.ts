@@ -9,6 +9,8 @@ export type StudentProfile = {
   status: string;
   subscription_expires_at: string | null;
   created_at: string;
+  avatar_url?: string | null;
+  state_of_origin?: string | null;
 };
 
 export function isSubscriptionActive(profile: StudentProfile | null): boolean {

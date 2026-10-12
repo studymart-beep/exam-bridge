@@ -60,7 +60,7 @@ export default function StudentSidebar({
             className="flex items-center gap-2 min-w-0"
             onClick={onClose}
           >
-            <Logo size={28} />
+            <Logo size={40} />
             <div className="min-w-0">
               <p className="font-heading font-bold text-primary text-sm leading-tight">
                 Exam Bridge

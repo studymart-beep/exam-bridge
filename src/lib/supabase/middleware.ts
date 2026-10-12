@@ -7,6 +7,17 @@ type CookieToSet = {
   options?: Record<string, unknown>;
 };
 
+function cookieOptions(options?: Record<string, unknown>) {
+  return {
+    path: "/",
+    sameSite: "lax" as const,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 30,
+    ...options,
+  };
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -27,12 +38,17 @@ export async function updateSession(request: NextRequest) {
         );
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options as never)
+          supabaseResponse.cookies.set(
+            name,
+            value,
+            cookieOptions(options) as never
+          )
         );
       },
     },
   });
 
+  // getUser refreshes the session when needed
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,7 +57,21 @@ export async function updateSession(request: NextRequest) {
   const isAdminRoute = path.startsWith("/admin");
   const isAdminLogin = path === "/admin/login";
 
-  if (isAdminLogin) return supabaseResponse;
+  if (isAdminLogin) {
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      if (profile?.role === "admin") {
+        const u = request.nextUrl.clone();
+        u.pathname = "/admin/dashboard";
+        return NextResponse.redirect(u);
+      }
+    }
+    return supabaseResponse;
+  }
 
   if (isAdminRoute) {
     if (!user) {

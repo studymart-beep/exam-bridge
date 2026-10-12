@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { signUpStudent } from "@/app/actions/auth";
@@ -46,12 +45,6 @@ export default function RegisterForm() {
       <Button type="submit" fullWidth loading={loading}>
         Create account
       </Button>
-      <p className="text-center text-sm text-text-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="text-primary font-medium hover:underline">
-          Log in
-        </Link>
-      </p>
     </form>
   );
 }

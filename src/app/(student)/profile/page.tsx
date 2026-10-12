@@ -67,6 +67,8 @@ export default async function ProfilePage() {
           fullName={profile.full_name || ""}
           email={profile.email || ""}
           phone={profile.phone || ""}
+          avatarUrl={(profile as { avatar_url?: string | null }).avatar_url || null}
+          stateOfOrigin={(profile as { state_of_origin?: string | null }).state_of_origin || null}
           active={active}
           expiresAt={expiresAt}
           daysLeft={daysLeft}

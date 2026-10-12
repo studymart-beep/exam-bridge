@@ -14,11 +14,15 @@ import {
 } from "@/lib/actions/student/profile";
 import { signOut } from "@/app/actions/auth";
 import { cn } from "@/lib/utils";
+import AvatarUpload from "@/components/shared/AvatarUpload";
+import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
 
 export type ProfileHubProps = {
   fullName: string;
   email: string;
   phone: string;
+  avatarUrl: string | null;
+  stateOfOrigin: string | null;
   active: boolean;
   expiresAt: string | null;
   daysLeft: number | null;
@@ -41,6 +45,8 @@ export default function ProfileHub({
   fullName,
   email,
   phone,
+  avatarUrl,
+  stateOfOrigin,
   active,
   expiresAt,
   daysLeft,
@@ -52,6 +58,7 @@ export default function ProfileHub({
   const [pwOpen, setPwOpen] = useState(false);
   const [name, setName] = useState(fullName);
   const [phoneVal, setPhoneVal] = useState(phone);
+  const [stateVal, setStateVal] = useState(stateOfOrigin || "");
   const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -59,7 +66,7 @@ export default function ProfileHub({
 
   function saveProfile() {
     startTransition(async () => {
-      const res = await updateProfile({ fullName: name, phone: phoneVal });
+      const res = await updateProfile({ fullName: name, phone: phoneVal, stateOfOrigin: stateVal });
       if (!res.success) showToast(res.error, "error");
       else {
         showToast("Profile updated", "success");
@@ -156,24 +163,15 @@ export default function ProfileHub({
       {/* Identity */}
       <div className="rounded-2xl bg-gradient-to-br from-primary-dark via-primary to-primary-dark text-white p-5 shadow-md">
         <div className="flex items-start gap-4">
-          <div className="relative shrink-0">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/15 border-2 border-secondary flex items-center justify-center font-heading font-bold text-xl sm:text-2xl">
-              {initials(fullName || email || "S")}
-            </div>
-            <button
-              type="button"
-              onClick={() => setEditOpen(true)}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary text-primary-dark text-xs font-bold flex items-center justify-center shadow"
-              aria-label="Edit profile"
-            >
-              ✎
-            </button>
-          </div>
+          <AvatarUpload name={fullName || email || "S"} avatarUrl={avatarUrl} size={80} />
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-lg sm:text-xl font-bold truncate">
               {fullName || "Student"}
             </h2>
             <p className="text-sm text-white/80 truncate">{email}</p>
+            {stateOfOrigin && (
+              <p className="text-xs text-white/70 mt-0.5">{stateOfOrigin}</p>
+            )}
             <div className="flex flex-wrap gap-2 mt-2">
               <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-white/15">
                 Student
@@ -341,6 +339,21 @@ export default function ProfileHub({
             onChange={(e) => setPhoneVal(e.target.value)}
             placeholder="Optional"
           />
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            State of Origin
+          </label>
+          <select
+            className="w-full h-11 rounded-lg border border-border bg-surface px-3 text-sm"
+            value={stateVal}
+            onChange={(e) => setStateVal(e.target.value)}
+          >
+            <option value="">Not set</option>
+            {NIGERIA_STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
           <p className="text-xs text-text-muted">Email cannot be changed here.</p>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setEditOpen(false)}>

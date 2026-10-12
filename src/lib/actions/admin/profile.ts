@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/actions/admin/guard";
 export async function updateAdminProfile(input: {
   fullName: string;
   phone: string;
+  stateOfOrigin?: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   const auth = await requireAdmin();
   if (!auth.ok) return { success: false, error: auth.error };
@@ -17,7 +18,7 @@ export async function updateAdminProfile(input: {
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name, phone: input.phone.trim() || null })
+    .update({ full_name, phone: input.phone.trim() || null, state_of_origin: input.stateOfOrigin?.trim() || null })
     .eq("id", auth.userId);
   if (error) return { success: false, error: error.message };
   revalidatePath("/admin/profile");

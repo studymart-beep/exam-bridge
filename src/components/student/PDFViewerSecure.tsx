@@ -33,14 +33,21 @@ export default function PDFViewerSecure({
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [zoom, setZoom] = useState(1);
+  const [controls, setControls] = useState(true);
   const pdfDocRef = useRef<PDFDocumentProxy | null>(null);
   const rendered = useRef<Set<number>>(new Set());
-  const dataReady = useRef(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTap = useRef(0);
   const cacheKey = `pdf:${material.id}`;
 
+  const bumpControls = useCallback(() => {
+    setControls(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setControls(false), 3000);
+  }, []);
+
   const renderPageInto = useCallback(
-    async (pageNum: number, container: HTMLDivElement, scale: number) => {
+    async (pageNum: number, container: HTMLDivElement) => {
       const doc = pdfDocRef.current;
       if (!doc) return;
       let canvas = container.querySelector("canvas") as HTMLCanvasElement | null;
@@ -49,18 +56,21 @@ export default function PDFViewerSecure({
         container.appendChild(canvas);
       }
       const pdfPage = await doc.getPage(pageNum);
-      const baseW =
-        typeof window !== "undefined" ? window.innerWidth : 390;
+      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+      const baseW = typeof window !== "undefined" ? window.innerWidth : 390;
       const viewport0 = pdfPage.getViewport({ scale: 1 });
-      const fit = (baseW / viewport0.width) * scale;
-      const viewport = pdfPage.getViewport({ scale: fit });
+      const fit = baseW / viewport0.width;
+      const viewport = pdfPage.getViewport({ scale: fit * dpr });
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       canvas.style.width = "100%";
       canvas.style.height = "auto";
       canvas.style.display = "block";
+      canvas.style.background = "#FFFFFF";
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       await pdfPage.render({ canvasContext: ctx, viewport }).promise;
       rendered.current.add(pageNum);
     },
@@ -73,7 +83,6 @@ export default function PDFViewerSecure({
     const doc = await pdfjs.getDocument({ data: new Uint8Array(data) }).promise;
     pdfDocRef.current = doc;
     setNumPages(doc.numPages);
-    dataReady.current = true;
     rendered.current.clear();
   }, []);
 
@@ -109,7 +118,13 @@ export default function PDFViewerSecure({
     setOpen(true);
     document.body.style.overflow = "hidden";
     window.history.pushState({ ebPdfFs: true }, "");
+    bumpControls();
     if (!pdfDocRef.current) await load();
+  }
+
+  function closeReader() {
+    setOpen(false);
+    document.body.style.overflow = "";
   }
 
   async function toggleOrientation() {
@@ -119,19 +134,11 @@ export default function PDFViewerSecure({
         type?: string;
       };
       const type = orient?.type || "";
-      if (type.includes("landscape")) {
-        await orient.lock?.("portrait");
-      } else {
-        await orient.lock?.("landscape");
-      }
+      if (type.includes("landscape")) await orient.lock?.("portrait");
+      else await orient.lock?.("landscape");
     } catch {
-      /* ignore */
+      /* not supported */
     }
-  }
-
-  function closeReader() {
-    setOpen(false);
-    document.body.style.overflow = "";
   }
 
   useEffect(() => {
@@ -150,10 +157,8 @@ export default function PDFViewerSecure({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // Lazy render + visible page tracking
   useEffect(() => {
     if (!open || !numPages || !pdfDocRef.current) return;
-
     const root = scrollRef.current;
     if (!root) return;
 
@@ -163,11 +168,9 @@ export default function PDFViewerSecure({
           const n = Number((entry.target as HTMLElement).dataset.page);
           if (!n) continue;
           if (entry.isIntersecting && !rendered.current.has(n)) {
-            const el = entry.target as HTMLDivElement;
-            void renderPageInto(n, el, zoom);
+            void renderPageInto(n, entry.target as HTMLDivElement);
           }
         }
-        // pick most visible for badge
         let best = 1;
         let bestRatio = 0;
         for (const entry of entries) {
@@ -183,33 +186,18 @@ export default function PDFViewerSecure({
     );
 
     pageRefs.current.forEach((el) => io.observe(el));
-
-    // render first few immediately
     for (let i = 1; i <= Math.min(3, numPages); i++) {
       const el = pageRefs.current.get(i);
-      if (el) void renderPageInto(i, el, zoom);
+      if (el) void renderPageInto(i, el);
     }
-
     return () => io.disconnect();
-  }, [open, numPages, zoom, renderPageInto]);
-
-  // re-render all when zoom changes
-  useEffect(() => {
-    if (!open || !numPages) return;
-    rendered.current.clear();
-    for (let i = 1; i <= numPages; i++) {
-      const el = pageRefs.current.get(i);
-      if (el) {
-        el.innerHTML = "";
-        void renderPageInto(i, el, zoom);
-      }
-    }
-  }, [zoom]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, numPages, renderPageInto]);
 
   useEffect(() => {
     return () => {
       setActiveCacheKey(null);
       document.body.style.overflow = "";
+      if (hideTimer.current) clearTimeout(hideTimer.current);
     };
   }, []);
 
@@ -240,6 +228,13 @@ export default function PDFViewerSecure({
     } finally {
       setDownloading(false);
     }
+  }
+
+  function onSurfaceTap() {
+    const now = Date.now();
+    // single or double tap both just show controls
+    lastTap.current = now;
+    bumpControls();
   }
 
   return (
@@ -278,8 +273,8 @@ export default function PDFViewerSecure({
 
       {open && (
         <div
-          className="fixed inset-0 z-[200] bg-[#0A0A0A] flex flex-col"
-          style={{ width: "100vw", height: "100dvh" }}
+          className="fixed inset-0 z-[100] flex flex-col"
+          style={{ width: "100vw", height: "100dvh", background: "#0A0A0A" }}
         >
           {loading && (
             <p className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">
@@ -299,34 +294,13 @@ export default function PDFViewerSecure({
             </div>
           )}
 
-          <div className="absolute top-3 left-3 z-30 flex gap-1">
-            <button
-              type="button"
-              className="min-w-[44px] min-h-[44px] rounded-full bg-black/50 text-white text-sm"
-              onClick={() => void toggleOrientation()}
-              aria-label="Rotate"
-            >
-              ↻
-            </button>
-            <button
-              type="button"
-              className="min-w-[40px] min-h-[40px] rounded-full bg-black/50 text-white text-sm"
-              onClick={() => setZoom((z) => Math.max(0.75, z - 0.25))}
-            >
-              −
-            </button>
-            <button
-              type="button"
-              className="min-w-[40px] min-h-[40px] rounded-full bg-black/50 text-white text-sm"
-              onClick={() => setZoom((z) => Math.min(2.5, z + 0.25))}
-            >
-              +
-            </button>
-          </div>
-
+          {/* Close only top-right */}
           <button
             type="button"
-            className="absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg"
+            className={cn(
+              "absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg transition-opacity",
+              controls ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
             onClick={closeReader}
             aria-label="Close"
           >
@@ -341,9 +315,27 @@ export default function PDFViewerSecure({
             </div>
           )}
 
+          {/* Bottom center: rotate only */}
+          <div
+            className={cn(
+              "absolute bottom-0 inset-x-0 z-30 flex justify-center pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-opacity",
+              controls ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+          >
+            <button
+              type="button"
+              className="min-w-[52px] min-h-[44px] rounded-full bg-black/70 text-white text-lg px-5 border border-white/15"
+              onClick={() => void toggleOrientation()}
+              aria-label="Rotate"
+            >
+              ↻
+            </button>
+          </div>
+
           <div
             ref={scrollRef}
-            className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden"
+            className="flex-1 w-full h-full overflow-y-auto overflow-x-hidden bg-[#0A0A0A]"
+            onClick={onSurfaceTap}
           >
             {Array.from({ length: numPages }, (_, i) => i + 1).map((n) => (
               <div
@@ -353,7 +345,7 @@ export default function PDFViewerSecure({
                   if (el) pageRefs.current.set(n, el);
                   else pageRefs.current.delete(n);
                 }}
-                className="w-full min-h-[40vh] flex justify-center bg-[#0A0A0A]"
+                className="w-full min-h-[30vh] flex justify-center bg-white"
               />
             ))}
           </div>

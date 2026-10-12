@@ -15,7 +15,7 @@ export default async function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <Logo size={32} />
+            <Logo size={40} />
             <span className="font-heading font-bold text-primary hidden sm:inline">
               Exam Bridge
             </span>
@@ -170,7 +170,7 @@ export default async function LandingPage() {
       <footer className="border-t border-border bg-surface">
         <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Logo size={28} />
+            <Logo size={36} />
             <div>
               <p className="font-heading font-bold text-primary text-sm">Exam Bridge</p>
               <p className="text-xs text-text-muted">Learn • Prepare • Succeed</p>

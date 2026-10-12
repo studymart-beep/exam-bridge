@@ -35,6 +35,8 @@ export default async function AdminProfilePage() {
           fullName={profile.full_name || ""}
           email={profile.email || user.email || ""}
           phone={profile.phone || ""}
+          avatarUrl={profile.avatar_url || null}
+          stateOfOrigin={profile.state_of_origin || null}
           stats={{
             students: stats.students,
             activeSubs: stats.activeSubs ?? 0,
