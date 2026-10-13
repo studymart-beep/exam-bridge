@@ -2,11 +2,11 @@
   "name": "Exam Bridge",
   "short_name": "Exam Bridge",
   "description": "Prepare for JAMB & WAEC with focused practice.",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFFBEB",
+  "background_color": "#BBF7D0",
   "theme_color": "#166534",
   "icons": [
     {

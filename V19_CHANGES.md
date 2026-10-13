@@ -1,27 +1,24 @@
 # Exam Bridge v19
 
-## Colors
-- Page background: `#BBF7D0` (primary.soft / background token)
-- Card tints: green `#DCFCE7`, gold `#FEF9C3`, blue `#DBEAFE`
-- Borders: green `#86EFAC`, gold `#FDE68A`, blue `#93C5FD`
-- Text primary: `#052E16`; secondary: `#166534`
-- `Card` supports `tint` + `tintIndex` (index % 3 rotation)
-- `cardTintClass(index)` helper in `src/lib/utils.ts`
-- CSS utilities: `.card-tint-0|1|2`
+## 1. Palette
+- Page background `#BBF7D0`
+- Cards: green `#DCFCE7` / gold `#FEF9C3` / blue `#DBEAFE` via `Card` `tint` / `tintIndex`
+- Borders: green / gold / blue soft borders
+- `cardTintClass()` in utils; CSS `.card-tint-0|1|2`
 
-## CBT take
-- **Submit Exam** always visible in fixed bottom bar
-- Confirm modal: unanswered count + Keep Writing / Submit
-- Timer end: "Time is up!" modal with 10s countdown + Submit Now
-- Auto-submit at 0; inputs disabled while submitting
-- Prevent double-submit via ref
+## 2. CBT take
+- Fixed **Submit Exam** button
+- Confirm modal with unanswered count
+- Time-up modal + 10s countdown + auto-submit
+- Inputs locked while submitting
+
+## 3. PWA launch
+- Student `manifest.json` → `start_url: "/"` (landing)
+- Admin `admin-manifest.json` → `start_url: "/admin/login"`
+- Theme/background colors aligned to green palette
 
 ## Files
-- tailwind.config.ts, globals.css
-- src/components/ui/Card.tsx
-- src/lib/utils.ts
+- tailwind.config.ts, src/app/globals.css
+- src/components/ui/Card.tsx, src/lib/utils.ts
 - src/components/student/TakeExamClient.tsx
-
-## Assumptions
-- Resume of expired in-progress attempts left to existing startExam server logic
-- Landing/admin pages inherit body background via globals; cards can use tintIndex gradually
+- public/manifest.json, public/admin-manifest.json
