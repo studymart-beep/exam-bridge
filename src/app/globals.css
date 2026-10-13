@@ -11,6 +11,7 @@
 
   body {
     @apply bg-background text-text-primary font-body antialiased;
+    background-color: #BBF7D0;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -29,6 +30,17 @@
 
   .safe-top {
     padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Rotating card tints for grids: green → gold → blue */
+  .card-tint-0 {
+    @apply bg-primary-light border-border-green;
+  }
+  .card-tint-1 {
+    @apply bg-accent-light border-border;
+  }
+  .card-tint-2 {
+    @apply bg-calm-light border-border-blue;
   }
 }
 

@@ -26,24 +26,27 @@ const config: Config = {
           light: "#FEF9C3",
         },
         calm: {
-          DEFAULT: "#0369A1",
+          DEFAULT: "#60A5FA",
           light: "#DBEAFE",
+          border: "#93C5FD",
         },
         success: "#16A34A",
         error: "#DC2626",
         warning: "#F59E0B",
-        background: "#F0FDF4",
+        background: "#BBF7D0",
         cream: "#FFFBEB",
-        mist: "#F0FDF4",
+        mist: "#DCFCE7",
         surface: "#FFFFFF",
         border: {
           DEFAULT: "#FDE68A",
           soft: "#FEF3C7",
+          green: "#86EFAC",
+          blue: "#93C5FD",
         },
         text: {
           primary: "#052E16",
-          secondary: "#3F6212",
-          muted: "#71717A",
+          secondary: "#166534",
+          muted: "#3F6212",
         },
       },
       fontFamily: {
@@ -51,10 +54,10 @@ const config: Config = {
         body: ["Inter", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        soft: "0 1px 3px 0 rgb(22 101 52 / 0.06), 0 1px 2px -1px rgb(22 101 52 / 0.04)",
-        card: "0 4px 12px -2px rgb(22 101 52 / 0.08), 0 2px 4px -2px rgb(202 138 4 / 0.06)",
+        soft: "0 1px 3px 0 rgb(22 101 52 / 0.08), 0 1px 2px -1px rgb(22 101 52 / 0.05)",
+        card: "0 4px 12px -2px rgb(22 101 52 / 0.1), 0 2px 4px -2px rgb(202 138 4 / 0.06)",
         elevated:
-          "0 12px 24px -4px rgb(22 101 52 / 0.1), 0 4px 8px -4px rgb(202 138 4 / 0.08)",
+          "0 12px 24px -4px rgb(22 101 52 / 0.12), 0 4px 8px -4px rgb(202 138 4 / 0.08)",
         glow: "0 0 0 3px rgb(234 179 8 / 0.35), 0 4px 14px rgb(22 101 52 / 0.15)",
       },
       borderRadius: {
@@ -62,7 +65,7 @@ const config: Config = {
         "2xl": "1rem",
       },
       backgroundImage: {
-        "hero-soft": "linear-gradient(135deg, #F0FDF4 0%, #FEF9C3 100%)",
+        "hero-soft": "linear-gradient(135deg, #BBF7D0 0%, #FEF9C3 100%)",
       },
     },
   },

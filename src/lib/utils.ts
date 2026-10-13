@@ -35,3 +35,12 @@ export function copyToClipboard(text: string): Promise<void> {
   }
   return Promise.reject(new Error("Clipboard not available"));
 }
+
+
+/** Rotate green / gold / blue for grid cards (adjacent never match). */
+export function cardTintClass(index: number): string {
+  const i = ((index % 3) + 3) % 3;
+  if (i === 0) return "bg-primary-light border-border-green";
+  if (i === 1) return "bg-accent-light border-border";
+  return "bg-calm-light border-border-blue";
+}
