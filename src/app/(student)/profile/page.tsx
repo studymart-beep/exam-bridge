@@ -4,6 +4,7 @@ import {
   getCurrentProfile,
   isSubscriptionActive,
 } from "@/lib/data/student/profile";
+import { resolveAvatarUrl } from "@/lib/data/profile";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -12,6 +13,10 @@ export const dynamic = "force-dynamic";
 export default async function ProfilePage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
+
+  const avatarDisplay = await resolveAvatarUrl(
+    (profile as { avatar_url?: string | null }).avatar_url
+  );
 
   const active = isSubscriptionActive(profile);
   const expiresAt = profile.subscription_expires_at;
@@ -68,7 +73,10 @@ export default async function ProfilePage() {
           email={profile.email || ""}
           phone={profile.phone || ""}
           avatarUrl={avatarDisplay}
-          stateOfOrigin={(profile as { state_of_origin?: string | null }).state_of_origin || null}
+          stateOfOrigin={
+            (profile as { state_of_origin?: string | null }).state_of_origin ||
+            null
+          }
           active={active}
           expiresAt={expiresAt}
           daysLeft={daysLeft}
