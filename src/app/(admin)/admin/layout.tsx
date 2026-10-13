@@ -2,6 +2,8 @@ import { AdminMenuProvider } from "@/components/admin/AdminMenuContext";
 import AdminPwaMeta from "@/components/pwa/AdminPwaMeta";
 import { getCurrentProfileBrief } from "@/lib/data/profile";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {

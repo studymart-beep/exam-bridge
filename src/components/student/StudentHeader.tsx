@@ -30,8 +30,10 @@ export default function StudentHeader({
   const user = useStudentUser();
   const openSidebar = onOpenSidebar ?? openFromContext;
 
-  const name = userName || user.fullName || "Student";
-  const src = avatarUrl !== undefined ? avatarUrl : user.avatarUrl;
+  const name = (userName && userName.trim()) || user.fullName || "Student";
+  // Prefer non-empty prop; otherwise fall back to layout context
+  const src =
+    (avatarUrl && avatarUrl.trim()) || user.avatarUrl || null;
 
   const initials =
     name

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type Profile = {
   id: string;
@@ -51,11 +52,42 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   }
 }
 
-/** Lightweight name + avatar for headers/sidebars */
+/**
+ * Resolve profiles.avatar_url (storage path OR old signed URL) to a
+ * usable image URL for <img src>.
+ */
+export async function resolveAvatarUrl(
+  stored: string | null | undefined
+): Promise<string | null> {
+  if (!stored || !stored.trim()) return null;
+  const value = stored.trim();
+
+  // Already a full URL (legacy signed URLs kept working)
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    return value;
+  }
+
+  // Storage path: "userId/timestamp.jpg"
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.storage
+      .from("avatars")
+      .createSignedUrl(value, 60 * 60 * 24 * 7); // 7 days
+    if (error || !data?.signedUrl) return null;
+    return data.signedUrl;
+  } catch {
+    return null;
+  }
+}
+
+/** Lightweight name + avatar for headers/sidebars (fresh signed URL) */
 export async function getCurrentProfileBrief(): Promise<ProfileBrief> {
   const p = await getCurrentProfile();
+  const avatarUrl = await resolveAvatarUrl(p?.avatar_url);
   return {
-    fullName: p?.full_name?.trim() || (p?.role === "admin" ? "Admin" : "Student"),
-    avatarUrl: p?.avatar_url?.trim() || null,
+    fullName:
+      p?.full_name?.trim() ||
+      (p?.role === "admin" ? "Admin" : "Student"),
+    avatarUrl,
   };
 }

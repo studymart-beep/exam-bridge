@@ -36,7 +36,7 @@ export default async function SubscribePage() {
 
   return (
     <div>
-      <StudentHeader title="Subscribe" userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null} />
+      <StudentHeader title="Subscribe" userName={profile?.full_name || "Student"} />
       <div className="px-4 sm:px-6 py-5 max-w-lg mx-auto space-y-5">
         {!ready ? (
           <Card className="text-center py-10">

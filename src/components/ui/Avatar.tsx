@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface AvatarProps {
   initials: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
-  /** Profile image URL — falls back to initials on error or if empty */
   src?: string | null;
 }
 
@@ -25,7 +24,11 @@ export default function Avatar({
     xl: "w-20 h-20 text-2xl",
   };
 
-  const showImg = Boolean(src) && !failed;
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  const showImg = Boolean(src && src.trim()) && !failed;
 
   if (showImg) {
     return (
@@ -35,7 +38,7 @@ export default function Avatar({
         alt={initials}
         onError={() => setFailed(true)}
         className={cn(
-          "rounded-full object-cover bg-primary-light",
+          "rounded-full object-cover bg-primary-light shrink-0",
           sizes[size],
           className
         )}
@@ -46,7 +49,7 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        "rounded-full bg-primary text-white font-semibold flex items-center justify-center",
+        "rounded-full bg-primary text-white font-semibold flex items-center justify-center shrink-0",
         sizes[size],
         className
       )}

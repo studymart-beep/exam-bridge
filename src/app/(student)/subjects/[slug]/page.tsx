@@ -27,7 +27,7 @@ export default async function SubjectDetailPage({ params }: Props) {
         title={subject.name}
         showBack
         backHref="/subjects"
-        userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null}
+        userName={profile?.full_name || "Student"}
       />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-4">
         {subject.description && (

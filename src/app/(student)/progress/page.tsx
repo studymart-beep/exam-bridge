@@ -38,7 +38,7 @@ export default async function ProgressPage() {
 
   return (
     <div>
-      <StudentHeader title="Progress" userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null} />
+      <StudentHeader title="Progress" userName={profile?.full_name || "Student"} />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-6">
         <Card className="text-center">
           <p className="text-sm text-text-muted">Overall progress</p>

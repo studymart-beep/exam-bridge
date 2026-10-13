@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminGetDashboardStats } from "@/lib/data/admin/reports";
 import { adminGetSettings } from "@/lib/data/admin/settings";
 import { redirect } from "next/navigation";
+import { resolveAvatarUrl } from "@/lib/data/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,8 @@ export default async function AdminProfilePage() {
 
   if (!profile || profile.role !== "admin") redirect("/admin/login");
 
+  const avatarDisplay = await resolveAvatarUrl(profile.avatar_url);
+
   const [stats, settings] = await Promise.all([
     adminGetDashboardStats(),
     adminGetSettings(),
@@ -35,7 +38,7 @@ export default async function AdminProfilePage() {
           fullName={profile.full_name || ""}
           email={profile.email || user.email || ""}
           phone={profile.phone || ""}
-          avatarUrl={profile.avatar_url || null}
+          avatarUrl={avatarDisplay}
           stateOfOrigin={profile.state_of_origin || null}
           stats={{
             students: stats.students,

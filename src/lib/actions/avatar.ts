@@ -18,7 +18,6 @@ export type AvatarUploadResult =
 export async function getAvatarUploadUrl(
   contentType: string
 ): Promise<AvatarUploadResult> {
-  // Cropped output is always JPEG
   const type = ALLOWED.includes(contentType) ? contentType : "image/jpeg";
   const supabase = await createClient();
   const {
@@ -62,22 +61,28 @@ export async function finalizeAvatar(
     return { success: false, error: "Invalid path" };
   }
 
-  const admin = createAdminClient();
-  const { data: signed } = await admin.storage
-    .from("avatars")
-    .createSignedUrl(path, 60 * 60 * 24 * 365);
-
-  const avatar_url = signed?.signedUrl || path;
-
+  // Store storage PATH only (stable). Display layer signs on read.
   const { error } = await supabase
     .from("profiles")
-    .update({ avatar_url })
+    .update({ avatar_url: path })
     .eq("id", user.id);
 
   if (error) return { success: false, error: error.message };
 
+  const admin = createAdminClient();
+  const { data: signed } = await admin.storage
+    .from("avatars")
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+  const displayUrl = signed?.signedUrl || path;
+
+  // Revalidate layouts so headers/sidebars pick up new avatar
+  revalidatePath("/", "layout");
+  revalidatePath("/dashboard", "layout");
   revalidatePath("/profile");
+  revalidatePath("/admin", "layout");
   revalidatePath("/admin/profile");
-  revalidatePath("/dashboard");
-  return { success: true, avatarUrl: avatar_url };
+  revalidatePath("/admin/dashboard");
+
+  return { success: true, avatarUrl: displayUrl };
 }

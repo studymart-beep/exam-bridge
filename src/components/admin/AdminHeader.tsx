@@ -28,8 +28,9 @@ export default function AdminHeader({
   const user = useAdminUser();
   const openSidebar = onMenuClick ?? openFromContext;
 
-  const name = userName || user.fullName || "Admin";
-  const src = avatarUrl !== undefined ? avatarUrl : user.avatarUrl;
+  const name = (userName && userName.trim()) || user.fullName || "Admin";
+  const src =
+    (avatarUrl && avatarUrl.trim()) || user.avatarUrl || null;
   const initials =
     name
       .split(" ")

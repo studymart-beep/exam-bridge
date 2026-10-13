@@ -12,7 +12,7 @@ export default async function CbtListPage() {
 
   return (
     <div>
-      <StudentHeader title="CBT Practice" userName={profile?.full_name || "Student"} avatarUrl={profile?.avatar_url ?? null} />
+      <StudentHeader title="CBT Practice" userName={profile?.full_name || "Student"} />
       <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-3">
         {exams.length === 0 ? (
           <Card className="text-center py-10">
