@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/Toast";
 
 type Material = {
   id: string;
-  type: "video" | "pdf" | "image";
+  type: "video" | "pdf" | "image" | "summary_image";
   title: string;
   source: string | null;
   source_type?: string | null;
