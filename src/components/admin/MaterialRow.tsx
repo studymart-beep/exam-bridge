@@ -12,16 +12,18 @@ interface MaterialRowProps {
   onMoveDown: () => void;
 }
 
-const typeLabel: Record<Material["type"], string> = {
+const typeLabel: Record<string, string> = {
   video: "Video",
   pdf: "PDF",
   image: "Image",
+  summary_image: "Summary",
 };
 
-const typeVariant: Record<Material["type"], "info" | "warning" | "success"> = {
+const typeVariant: Record<string, "info" | "warning" | "success"> = {
   video: "info",
   pdf: "warning",
   image: "success",
+  summary_image: "info",
 };
 
 function TypeIcon({ type }: { type: Material["type"] }) {

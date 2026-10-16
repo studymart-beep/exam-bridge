@@ -11,13 +11,24 @@ function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
 }
 
-function bucketForMime(contentType: string): "videos" | "pdfs" | null {
+function bucketForMime(
+  contentType: string
+): "videos" | "pdfs" | "materials" | null {
   if (contentType.startsWith("video/")) return "videos";
   if (contentType === "application/pdf") return "pdfs";
+  if (
+    contentType === "image/jpeg" ||
+    contentType === "image/png" ||
+    contentType === "image/webp"
+  ) {
+    return "materials";
+  }
   return null;
 }
 
-function typeFromMime(contentType: string): "video" | "pdf" | "image" | null {
+function typeFromMime(
+  contentType: string
+): "video" | "pdf" | "image" | null {
   if (contentType.startsWith("video/")) return "video";
   if (contentType === "application/pdf") return "pdf";
   if (contentType.startsWith("image/")) return "image";
@@ -47,7 +58,7 @@ export async function requestUploadUrl(input: {
 
   const bucket = bucketForMime(contentType);
   if (!bucket) {
-    return { error: "Unsupported file type. Use video/* or application/pdf." };
+    return { error: "Unsupported file type. Use video, PDF, or JPEG/PNG/WebP." };
   }
 
   const path = `${topicId}/${Date.now()}-${sanitizeFilename(fileName)}`;
@@ -83,6 +94,8 @@ export async function finalizeMaterial(input: {
   sourceType?: "supabase" | "cloudflare";
   mimeType: string;
   size?: number;
+  /** Force type e.g. summary_image */
+  materialType?: "video" | "pdf" | "image" | "summary_image";
 }): Promise<{ success: true } | { success: false; error: string }> {
   const auth = await requireAdmin();
   if (!auth.ok) return { success: false, error: auth.error };
@@ -92,16 +105,12 @@ export async function finalizeMaterial(input: {
     return { success: false, error: "Title and path are required" };
   }
 
-  const type = typeFromMime(input.mimeType);
-  if (!type || type === "image") {
-    // image still via source URL path below if needed
+  let materialType = input.materialType || null;
+  if (!materialType) {
+    const type = typeFromMime(input.mimeType);
+    if (type && type !== "image") materialType = type;
+    else if (input.mimeType.startsWith("image/")) materialType = "image";
   }
-  const materialType =
-    type && type !== "image"
-      ? type
-      : input.mimeType.startsWith("image/")
-        ? "image"
-        : null;
 
   if (!materialType) {
     return { success: false, error: "Could not determine material type" };

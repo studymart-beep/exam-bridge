@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export type AdminMaterialRow = {
   id: string;
   topic_id: string;
-  type: "video" | "pdf" | "image";
+  type: "video" | "pdf" | "image" | "summary_image";
   title: string;
   source: string | null;
   order_index: number;

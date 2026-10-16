@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
 import LoginForm from "@/components/student/LoginForm";
+import { pageMeta } from "@/lib/seo";
+
+export const metadata: Metadata = pageMeta({
+  title: "Log In",
+  description: "Sign in to your Exam Bridge account.",
+  path: "/login",
+});
 
 export default function LoginPage() {
   return (

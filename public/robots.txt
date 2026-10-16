@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /subscribe
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /subjects
+Disallow: /cbt
+Disallow: /profile
+Disallow: /progress
+Disallow: /results
+Disallow: /notifications
+Disallow: /downloads
+Disallow: /settings
+Disallow: /api
+
+Sitemap: https://exam-bridge-one.vercel.app/sitemap.xml

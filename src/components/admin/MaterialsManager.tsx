@@ -54,7 +54,7 @@ export default function MaterialsManager({
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<AdminMaterialRow | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [type, setType] = useState<"video" | "pdf" | "image">("video");
+  const [type, setType] = useState<"video" | "pdf" | "image" | "summary_image">("video");
   const [title, setTitle] = useState("");
   const [source, setSource] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -108,18 +108,28 @@ export default function MaterialsManager({
     }
 
     // New material with file → direct-to-Supabase
-    if (file && (type === "video" || type === "pdf")) {
-      if (file.size > MAX_MB * 1024 * 1024) {
-        showToast(`File must be ≤ ${MAX_MB} MB`, "error");
+    if (file && (type === "video" || type === "pdf" || type === "image" || type === "summary_image")) {
+      const maxMb = type === "summary_image" || type === "image" ? 5 : MAX_MB;
+      if (file.size > maxMb * 1024 * 1024) {
+        showToast(`File must be ≤ ${maxMb} MB`, "error");
         return;
       }
       setUploading(true);
       setProgress(0);
       try {
+        const defaultMime =
+          type === "pdf"
+            ? "application/pdf"
+            : type === "video"
+              ? "video/mp4"
+              : "image/jpeg";
         const urlRes = await requestUploadUrl({
           topicId,
-          fileName: file.name,
-          contentType: file.type || (type === "pdf" ? "application/pdf" : "video/mp4"),
+          fileName:
+            type === "summary_image"
+              ? `summary-${file.name}`
+              : file.name,
+          contentType: file.type || defaultMime,
           size: file.size,
         });
         if ("error" in urlRes) {
@@ -132,8 +142,9 @@ export default function MaterialsManager({
           title: title.trim(),
           path: urlRes.path,
           sourceType: "supabase",
-          mimeType: file.type || (type === "pdf" ? "application/pdf" : "video/mp4"),
+          mimeType: file.type || defaultMime,
           size: file.size,
+          materialType: type === "summary_image" ? "summary_image" : undefined,
         });
         if (!fin.success) {
           showToast(fin.error || "Finalize failed", "error");
@@ -216,7 +227,7 @@ export default function MaterialsManager({
           <select
             value={type}
             onChange={(e) => {
-              setType(e.target.value as "video" | "pdf" | "image");
+              setType(e.target.value as "video" | "pdf" | "image" | "summary_image");
               setFile(null);
             }}
             className="w-full min-h-11 h-11 px-3 rounded-lg border border-border text-base sm:text-sm bg-surface"
@@ -225,6 +236,7 @@ export default function MaterialsManager({
             <option value="video">Video</option>
             <option value="pdf">PDF</option>
             <option value="image">Image</option>
+              <option value="summary_image">Topic Summary Image</option>
           </select>
           <Input
             label="Title"
@@ -232,14 +244,14 @@ export default function MaterialsManager({
             onChange={(e) => setTitle(e.target.value)}
             disabled={busy}
           />
-          {!editing && (type === "video" || type === "pdf") && (
+          {!editing && (type === "video" || type === "pdf" || type === "image" || type === "summary_image") && (
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1.5">
                 Upload file (max {MAX_MB} MB) — goes direct to storage
               </label>
               <input
                 type="file"
-                accept={type === "video" ? "video/*" : "application/pdf"}
+                accept={type === "video" ? "video/*" : type === "pdf" ? "application/pdf" : "image/jpeg,image/png,image/webp"}
                 className="block w-full text-sm text-text-secondary"
                 disabled={busy}
                 onChange={(e) => setFile(e.target.files?.[0] || null)}

@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
 import RegisterForm from "@/components/student/RegisterForm";
+import { pageMeta } from "@/lib/seo";
+
+export const metadata: Metadata = pageMeta({
+  title: "Create Account",
+  description: "Register free to start preparing for JAMB & WAEC.",
+  path: "/register",
+});
 
 export default function RegisterPage() {
   return (

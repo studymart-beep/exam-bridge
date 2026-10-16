@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/components/brand/Logo";
@@ -5,14 +6,37 @@ import Button from "@/components/ui/Button";
 import { listPublishedSubjects } from "@/lib/data/student/subjects";
 import SubjectCard from "@/components/student/SubjectCard";
 import Section from "@/components/ui/Section";
+import { pageMeta } from "@/lib/seo";
+
+export const metadata: Metadata = pageMeta({
+  title: "Exam Bridge — Ace JAMB & WAEC with Focused Practice",
+  description: "Video lessons, PDF study notes, and CBT practice for JAMB and WAEC. Built for Nigerian students.",
+  path: "/",
+});
 
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const subjects = (await listPublishedSubjects()).slice(0, 8);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: "Exam Bridge",
+    description:
+      "Exam preparation platform for JAMB and WAEC students.",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://exam-bridge-one.vercel.app",
+    logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://exam-bridge-one.vercel.app"}/logo.png`,
+    sameAs: [] as string[],
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/95 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
@@ -191,5 +215,6 @@ export default async function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

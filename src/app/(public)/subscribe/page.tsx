@@ -1,3 +1,12 @@
+import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
+
+export const metadata: Metadata = pageMeta({
+  title: "Subscribe",
+  description: "Unlock full access to videos, PDFs, and CBT practice.",
+  path: "/subscribe",
+});
+
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";
 import { getPublicSettings } from "@/lib/data/student/settings";

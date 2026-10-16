@@ -105,3 +105,10 @@
 .animate-pass-pop {
   animation: pass-pop 0.55s ease-out;
 }
+
+
+@media print {
+  .pdf-viewer-wrapper {
+    display: none !important;
+  }
+}

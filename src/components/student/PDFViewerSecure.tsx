@@ -1,5 +1,12 @@
 "use client";
 
+/* These measures stop casual download and print attempts but cannot prevent a
+ * determined user from extracting an already-loaded PDF via DevTools or screen
+ * capture. No web platform can fully prevent this.
+ * Full-screen coverage depends on the browser and manifest display_override.
+ * Users must uninstall/reinstall the PWA for manifest changes to take effect.
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
@@ -155,10 +162,22 @@ export default function PDFViewerSecure({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeReader();
+      if (e.key === "Escape") {
+        closeReader();
+        return;
+      }
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && (e.key === "s" || e.key === "S" || e.key === "p" || e.key === "P")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (mod && e.shiftKey && (e.key === "s" || e.key === "S" || e.key === "p" || e.key === "P")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [open]);
 
   // Lazy render + visible page
@@ -294,8 +313,10 @@ export default function PDFViewerSecure({
 
       {open && (
         <div
-          className="fixed inset-0 z-[100] flex flex-col bg-[#0A0A0A]"
+          id="eb-pdf-viewer"
+          className="pdf-viewer-wrapper fixed inset-0 z-[9999] flex flex-col bg-[#0A0A0A] select-none"
           style={{ width: "100vw", height: "100dvh" }}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {loading && (
             <p className="absolute inset-0 flex items-center justify-center text-white text-sm z-10">

@@ -274,7 +274,7 @@ export interface PlatformSettings {
   accountNumber: string;
 }
 
-export type MaterialType = "video" | "pdf" | "image";
+export type MaterialType = "video" | "pdf" | "image" | "summary_image";
 
 export interface Material {
   id: string;

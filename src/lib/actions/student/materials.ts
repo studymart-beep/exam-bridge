@@ -84,15 +84,26 @@ export async function getMaterialSignedUrl(
     }
 
     // supabase storage path: may be "videos/..." or relative "topicId/file"
-    let path = material.source;
-    let bucket = material.type === "pdf" ? "pdfs" : "videos";
+    let path = material.source as string;
+    let bucket =
+      material.type === "pdf"
+        ? "pdfs"
+        : material.type === "summary_image" || material.type === "image"
+          ? "materials"
+          : "videos";
     if (path.startsWith("videos/")) {
       bucket = "videos";
       path = path.slice("videos/".length);
     } else if (path.startsWith("pdfs/")) {
       bucket = "pdfs";
       path = path.slice("pdfs/".length);
-    } else if (material.type === "image") {
+    } else if (path.startsWith("materials/")) {
+      bucket = "materials";
+      path = path.slice("materials/".length);
+    } else if (
+      (material.type === "image" || material.type === "summary_image") &&
+      path.startsWith("http")
+    ) {
       return { url: material.source, subscriptionExpiresAt: expiresAt };
     }
 
@@ -114,5 +125,48 @@ export async function getMaterialSignedUrl(
     return {
       error: e instanceof Error ? e.message : "Failed to load material",
     };
+  }
+}
+
+/** Topic hero summary image — no subscription required. */
+export async function getTopicSummaryImageUrl(
+  topicId: string
+): Promise<{ url: string } | { error: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: material } = await supabase
+      .from("materials")
+      .select("id, type, source, source_type")
+      .eq("topic_id", topicId)
+      .eq("type", "summary_image")
+      .order("order_index")
+      .limit(1)
+      .maybeSingle();
+
+    if (!material?.source) return { error: "No summary image" };
+
+    if (material.source.startsWith("http")) {
+      return { url: material.source };
+    }
+
+    let path = material.source as string;
+    let bucket = "materials";
+    if (path.startsWith("materials/")) {
+      path = path.slice("materials/".length);
+    } else if (path.startsWith("videos/")) {
+      bucket = "videos";
+      path = path.slice("videos/".length);
+    }
+
+    const admin = createAdminClient();
+    const { data: signed, error } = await admin.storage
+      .from(bucket)
+      .createSignedUrl(path, 600);
+    if (error || !signed?.signedUrl) {
+      return { error: error?.message || "Could not sign URL" };
+    }
+    return { url: signed.signedUrl };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Failed" };
   }
 }

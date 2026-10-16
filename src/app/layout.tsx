@@ -4,16 +4,40 @@ import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import "./globals.css";
 
+const SITE =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  "https://exam-bridge-one.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Exam Bridge — Prepare for JAMB & WAEC",
+  metadataBase: new URL(SITE),
+  title: {
+    default: "Exam Bridge — Ace JAMB & WAEC with Focused Practice",
+    template: "%s | Exam Bridge",
+  },
   description:
-    "Study, practice, and pass. PDF notes, video lessons, and CBT practice for Nigerian students.",
+    "Video lessons, PDF study notes, and CBT practice for JAMB and WAEC. Built for Nigerian students.",
   applicationName: "Exam Bridge",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Exam Bridge",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Exam Bridge",
+    title: "Exam Bridge — Ace JAMB & WAEC with Focused Practice",
+    description:
+      "Video lessons, PDF study notes, and CBT practice for JAMB and WAEC.",
+    url: SITE,
+    images: [{ url: "/logo.png", width: 736, height: 736, alt: "Exam Bridge" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Exam Bridge — Ace JAMB & WAEC with Focused Practice",
+    description:
+      "Video lessons, PDF study notes, and CBT practice for JAMB and WAEC.",
+    images: ["/logo.png"],
   },
   icons: {
     icon: [
