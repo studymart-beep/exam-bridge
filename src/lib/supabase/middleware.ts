@@ -18,6 +18,17 @@ function cookieOptions(options?: Record<string, unknown>) {
   };
 }
 
+const PUBLIC_STUDENT = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/subscribe",
+  "/subscribe/pending",
+  "/subscribe/success",
+]);
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -48,7 +59,6 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // getUser refreshes the session when needed
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -56,7 +66,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAdminRoute = path.startsWith("/admin");
   const isAdminLogin = path === "/admin/login";
+  const visited = request.cookies.get("eb_visited")?.value === "1";
 
+  // --- Admin routes ---
   if (isAdminLogin) {
     if (user) {
       const { data: profile } = await supabase
@@ -92,9 +104,48 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // --- Student / public ---
+  // Set eb_visited on first non-admin visit (readable by JS: httpOnly false)
+  if (!visited && !isAdminRoute) {
+    supabaseResponse.cookies.set("eb_visited", "1", {
+      path: "/",
+      sameSite: "lax",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
+
+  // Returning visitor, not logged in, on landing → login
+  if (visited && !user && path === "/") {
+    const u = request.nextUrl.clone();
+    u.pathname = "/login";
+    return NextResponse.redirect(u);
+  }
+
+  // Logged-in users away from auth pages
+  if (user && (path === "/login" || path === "/register" || path === "/")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const u = request.nextUrl.clone();
+    u.pathname =
+      profile?.role === "admin" ? "/admin/dashboard" : "/dashboard";
+    return NextResponse.redirect(u);
+  }
+
+  // Guest may browse subjects list (preview) — not other student app routes
+  const guestAllowed =
+    path === "/subjects" ||
+    PUBLIC_STUDENT.has(path) ||
+    path.startsWith("/subscribe") ||
+    path.startsWith("/forgot-password") ||
+    path.startsWith("/reset-password");
+
   const protectedPrefixes = [
     "/dashboard",
-    "/subjects",
     "/cbt",
     "/progress",
     "/results",
@@ -102,20 +153,15 @@ export async function updateSession(request: NextRequest) {
     "/profile",
     "/settings",
   ];
-  const needsAuth = protectedPrefixes.some(
-    (p) => path === p || path.startsWith(p + "/")
-  );
+  // Subject detail requires login (guest uses modal on list)
+  const needsAuth =
+    protectedPrefixes.some((p) => path === p || path.startsWith(p + "/")) ||
+    path.startsWith("/subjects/");
 
   if (needsAuth && !user) {
     const u = request.nextUrl.clone();
     u.pathname = "/login";
     u.searchParams.set("next", path);
-    return NextResponse.redirect(u);
-  }
-
-  if (user && (path === "/login" || path === "/register")) {
-    const u = request.nextUrl.clone();
-    u.pathname = "/dashboard";
     return NextResponse.redirect(u);
   }
 

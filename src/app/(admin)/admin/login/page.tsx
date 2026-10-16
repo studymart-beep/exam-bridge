@@ -41,7 +41,17 @@ export default function AdminLoginPage() {
             required
             placeholder="admin@example.com"
           />
-          <Input label="Password" name="password" type="password" required />
+          <div>
+            <Input label="Password" name="password" type="password" required />
+            <div className="mt-1.5 text-right">
+              <a
+                href="/forgot-password"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Forgot password?
+              </a>
+            </div>
+          </div>
           <Button type="submit" fullWidth loading={pending}>
             Sign in
           </Button>

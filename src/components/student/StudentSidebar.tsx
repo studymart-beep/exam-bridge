@@ -11,6 +11,7 @@ interface StudentSidebarProps {
   onClose?: () => void;
   userName?: string;
   avatarUrl?: string | null;
+  isSubscribed?: boolean;
 }
 
 const mainNav = [
@@ -22,9 +23,8 @@ const mainNav = [
   { href: "/profile", label: "Profile" },
 ];
 
-const secondaryNav = [
+const secondaryNavBase = [
   { href: "/notifications", label: "Notifications" },
-  { href: "/subscribe", label: "Subscribe" },
 ];
 
 export default function StudentSidebar({
@@ -32,6 +32,7 @@ export default function StudentSidebar({
   onClose,
   userName = "Student",
   avatarUrl = null,
+  isSubscribed = false,
 }: StudentSidebarProps) {
   const pathname = usePathname();
   const isActive = (href: string) =>
@@ -110,7 +111,7 @@ export default function StudentSidebar({
             </Link>
           ))}
           <div className="pt-3 mt-2 border-t border-border space-y-1">
-            {secondaryNav.map((item) => (
+            {(isSubscribed ? secondaryNavBase : [...secondaryNavBase, { href: "/subscribe", label: "Subscribe" }]).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

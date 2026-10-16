@@ -29,10 +29,12 @@ export function StudentMenuProvider({
   children,
   userName = "Student",
   avatarUrl = null,
+  isSubscribed = false,
 }: {
   children: ReactNode;
   userName?: string;
   avatarUrl?: string | null;
+  isSubscribed?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const brief: UserBrief = { fullName: userName, avatarUrl };
@@ -47,6 +49,7 @@ export function StudentMenuProvider({
             onClose={() => setSidebarOpen(false)}
             userName={userName}
             avatarUrl={avatarUrl}
+            isSubscribed={isSubscribed}
           />
           <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
             <main className="flex-1">{children}</main>

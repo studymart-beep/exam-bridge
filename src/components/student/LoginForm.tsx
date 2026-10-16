@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { signInStudent } from "@/app/actions/auth";
@@ -32,14 +33,26 @@ export default function LoginForm() {
         label="Email"
         placeholder="you@email.com"
         required
+        autoComplete="email"
       />
-      <Input
-        name="password"
-        type="password"
-        label="Password"
-        placeholder="••••••••"
-        required
-      />
+      <div>
+        <Input
+          name="password"
+          type="password"
+          label="Password"
+          placeholder="Your password"
+          required
+          autoComplete="current-password"
+        />
+        <div className="mt-1.5 text-right">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+      </div>
       <Button type="submit" fullWidth loading={loading}>
         Log in
       </Button>

@@ -12,7 +12,7 @@ import {
   updateProfile,
   changePassword,
 } from "@/lib/actions/student/profile";
-import { signOut } from "@/app/actions/auth";
+import LogoutButton from "@/components/shared/LogoutButton";
 import { cn } from "@/lib/utils";
 import AvatarUpload from "@/components/shared/AvatarUpload";
 import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
@@ -312,18 +312,7 @@ export default function ProfileHub({
             </button>
           );
         })}
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="w-full flex items-center justify-between gap-3 px-4 min-h-[56px] text-error hover:bg-red-50 text-left"
-          >
-            <div>
-              <p className="text-sm font-medium">Log Out</p>
-              <p className="text-xs text-error/70">Sign out from your account</p>
-            </div>
-            <span>›</span>
-          </button>
-        </form>
+        <LogoutButton variant="student" />
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit profile">

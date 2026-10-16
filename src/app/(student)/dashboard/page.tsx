@@ -3,6 +3,7 @@ import Image from "next/image";
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import SubscriptionPrompt from "@/components/student/SubscriptionPrompt";
 import {
   getCurrentProfile,
   isSubscriptionActive,
@@ -178,6 +179,7 @@ export default async function DashboardPage() {
   return (
     <div>
       <StudentHeader title="Home" userName={profile?.full_name || "Student"} />
+      <SubscriptionPrompt show={!subscribed} />
       <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto space-y-5">
         {/* Hero */}
         <div className="relative w-full h-[200px] md:h-[280px] rounded-2xl overflow-hidden">

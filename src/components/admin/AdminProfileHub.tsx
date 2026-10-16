@@ -12,7 +12,7 @@ import {
   changeAdminPassword,
 } from "@/lib/actions/admin/profile";
 import { saveSettings } from "@/lib/actions/admin/settings";
-import { signOutAdmin } from "@/app/actions/auth";
+import LogoutButton from "@/components/shared/LogoutButton";
 import { cn } from "@/lib/utils";
 import AvatarUpload from "@/components/shared/AvatarUpload";
 import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
@@ -234,18 +234,7 @@ export default function AdminProfileHub({
           </div>
           <span className="text-text-muted">›</span>
         </Link>
-        <form action={signOutAdmin}>
-          <button
-            type="submit"
-            className="w-full flex items-center justify-between px-4 min-h-[56px] text-error hover:bg-red-50 text-left"
-          >
-            <div>
-              <p className="text-sm font-medium">Log Out</p>
-              <p className="text-xs text-error/70">Sign out of admin</p>
-            </div>
-            <span>›</span>
-          </button>
-        </form>
+        <LogoutButton variant="admin" />
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit profile">
