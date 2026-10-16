@@ -29,6 +29,8 @@ export default function ConfirmDialog({
       open={open}
       onClose={onClose}
       title={title}
+      size="sm"
+      fullScreenOnMobile={false}
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={loading}>

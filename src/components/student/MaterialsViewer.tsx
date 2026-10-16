@@ -14,6 +14,7 @@ type Material = {
   title: string;
   source: string | null;
   source_type?: string | null;
+  cover_url?: string | null;
 };
 
 export default function MaterialsViewer({
@@ -43,6 +44,7 @@ export default function MaterialsViewer({
                 title: m.title,
                 source: m.source,
                 source_type: m.source_type,
+                cover_url: m.cover_url,
               }}
               subjectTitle={subjectTitle}
               topicTitle={topicTitle}
@@ -55,6 +57,7 @@ export default function MaterialsViewer({
                 title: m.title,
                 source: m.source,
                 source_type: m.source_type,
+                cover_url: m.cover_url,
               }}
               subjectTitle={subjectTitle}
               topicTitle={topicTitle}

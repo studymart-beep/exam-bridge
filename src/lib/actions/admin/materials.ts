@@ -96,7 +96,7 @@ export async function finalizeMaterial(input: {
   size?: number;
   /** Force type e.g. summary_image */
   materialType?: "video" | "pdf" | "image" | "summary_image";
-}): Promise<{ success: true } | { success: false; error: string }> {
+}): Promise<{ success: true; id: string } | { success: false; error: string }> {
   const auth = await requireAdmin();
   if (!auth.ok) return { success: false, error: auth.error };
 
@@ -135,19 +135,33 @@ export async function finalizeMaterial(input: {
       order_index: (maxRow?.order_index ?? -1) + 1,
     };
 
-    const { error } = await supabase.from("materials").insert(row);
+    const { data: inserted, error } = await supabase
+      .from("materials")
+      .insert(row)
+      .select("id")
+      .single();
     if (error) {
       if (error.message.includes("source_type")) {
         delete row.source_type;
-        const { error: e2 } = await supabase.from("materials").insert(row);
-        if (e2) return { success: false, error: e2.message };
-      } else {
-        return { success: false, error: error.message };
+        const { data: inserted2, error: e2 } = await supabase
+          .from("materials")
+          .insert(row)
+          .select("id")
+          .single();
+        if (e2 || !inserted2?.id) {
+          return { success: false, error: e2?.message || "Insert failed" };
+        }
+        revalidatePath(`/admin/topics/${input.topicId}/materials`);
+        return { success: true, id: inserted2.id as string };
       }
+      return { success: false, error: error.message };
+    }
+    if (!inserted?.id) {
+      return { success: false, error: "Insert failed" };
     }
 
     revalidatePath(`/admin/topics/${input.topicId}/materials`);
-    return { success: true };
+    return { success: true, id: inserted.id as string };
   } catch (e) {
     return {
       success: false,
@@ -264,4 +278,125 @@ export async function deleteMaterial(id: string, topicId: string) {
 
   revalidatePath(`/admin/topics/${topicId}/materials`);
   return { success: true as const };
+}
+
+/** Signed upload URL for cover images (covers bucket). */
+export async function requestCoverUploadUrl(input: {
+  materialId: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+}): Promise<
+  | { signedUrl: string; path: string; bucket: string }
+  | { error: string }
+> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { error: auth.error };
+
+  const allowed = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowed.includes(input.contentType)) {
+    return { error: "Cover must be JPEG, PNG, or WebP" };
+  }
+  if (input.size <= 0 || input.size > 5 * 1024 * 1024) {
+    return { error: "Cover must be between 1 byte and 5 MB" };
+  }
+  if (!input.materialId) return { error: "Missing material id" };
+
+  const ext =
+    input.contentType === "image/png"
+      ? "png"
+      : input.contentType === "image/webp"
+        ? "webp"
+        : "jpg";
+  const path = `${input.materialId}/${Date.now()}-cover.${ext}`;
+
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.storage
+      .from("covers")
+      .createSignedUploadUrl(path);
+    if (error || !data) {
+      return { error: error?.message || "Could not create cover upload URL" };
+    }
+    return {
+      signedUrl: data.signedUrl,
+      path: data.path || path,
+      bucket: "covers",
+    };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Cover upload URL failed",
+    };
+  }
+}
+
+/** Set cover_url after client finished PUT to covers bucket. */
+export async function setMaterialCover(input: {
+  materialId: string;
+  topicId: string;
+  path: string;
+}): Promise<{ success: true } | { success: false; error: string }> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+  if (!input.materialId || !input.path) {
+    return { success: false, error: "Missing material or path" };
+  }
+
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("materials")
+      .update({ cover_url: input.path })
+      .eq("id", input.materialId);
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/admin/topics/${input.topicId}/materials`);
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Failed to save cover",
+    };
+  }
+}
+
+export async function removeMaterialCover(input: {
+  materialId: string;
+  topicId: string;
+}): Promise<{ success: true } | { success: false; error: string }> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  try {
+    const supabase = await createClient();
+    const { data: mat } = await supabase
+      .from("materials")
+      .select("cover_url")
+      .eq("id", input.materialId)
+      .maybeSingle();
+
+    const { error } = await supabase
+      .from("materials")
+      .update({ cover_url: null })
+      .eq("id", input.materialId);
+    if (error) return { success: false, error: error.message };
+
+    if (mat?.cover_url) {
+      try {
+        let path = mat.cover_url as string;
+        if (path.startsWith("covers/")) path = path.slice("covers/".length);
+        const admin = createAdminClient();
+        await admin.storage.from("covers").remove([path]);
+      } catch {
+        /* ignore storage cleanup */
+      }
+    }
+
+    revalidatePath(`/admin/topics/${input.topicId}/materials`);
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Failed to remove cover",
+    };
+  }
 }

@@ -13,6 +13,7 @@ export type CacheMeta = {
   subscriptionExpiresAt: number | null;
   subjectTitle?: string;
   topicTitle?: string;
+  coverUrl?: string | null;
 };
 
 type CacheRecord = { key: string; blob: Blob; meta: CacheMeta };

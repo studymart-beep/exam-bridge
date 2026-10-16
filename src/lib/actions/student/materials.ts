@@ -170,3 +170,29 @@ export async function getTopicSummaryImageUrl(
     return { error: e instanceof Error ? e.message : "Failed" };
   }
 }
+
+/** Signed URL for a material cover image (private covers bucket). */
+export async function getCoverSignedUrl(
+  coverPath: string | null | undefined
+): Promise<{ url: string } | { error: string }> {
+  if (!coverPath) return { error: "No cover" };
+  try {
+    if (coverPath.startsWith("http")) return { url: coverPath };
+
+    let path = coverPath;
+    if (path.startsWith("covers/")) path = path.slice("covers/".length);
+
+    const admin = createAdminClient();
+    const { data, error } = await admin.storage
+      .from("covers")
+      .createSignedUrl(path, 600);
+    if (error || !data?.signedUrl) {
+      return { error: error?.message || "Could not sign cover URL" };
+    }
+    return { url: data.signedUrl };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Failed to load cover",
+    };
+  }
+}

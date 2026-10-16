@@ -8,6 +8,7 @@ export type StudentMaterial = {
   source: string | null;
   source_type?: string | null;
   order_index: number;
+  cover_url?: string | null;
 };
 
 export async function listMaterialsByTopic(

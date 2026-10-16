@@ -7,6 +7,7 @@ export type AdminMaterialRow = {
   title: string;
   source: string | null;
   order_index: number;
+  cover_url?: string | null;
 };
 
 export async function adminListMaterialsByTopic(topicId: string): Promise<AdminMaterialRow[]> {

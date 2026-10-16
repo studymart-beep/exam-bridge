@@ -284,6 +284,8 @@ export interface Material {
   source: string;
   orderIndex: number;
   createdAt: string;
+  /** Storage path in covers bucket, or null */
+  coverUrl?: string | null;
 }
 
 export interface TopicCbtLink {

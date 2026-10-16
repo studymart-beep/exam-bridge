@@ -18,12 +18,14 @@ import {
 } from "@/lib/offline/cache";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
+import CoverThumb from "@/components/shared/CoverThumb";
 
 type MaterialProp = {
   id: string;
   title: string;
   source: string | null;
   source_type?: string | null;
+  cover_url?: string | null;
 };
 
 type Props = {
@@ -386,6 +388,7 @@ export default function PDFViewerSecure({
           : null,
         subjectTitle: subjectTitle || undefined,
         topicTitle: topicTitle || undefined,
+        coverUrl: material.cover_url || undefined,
       };
       await putFile(cacheKey, blob, meta);
       setCached(true);
@@ -406,9 +409,13 @@ export default function PDFViewerSecure({
           onClick={() => void openReader()}
           className="w-full text-left rounded-2xl overflow-hidden border border-border bg-surface shadow-sm active:scale-[0.99] transition"
         >
-          <div className="relative w-full aspect-[4/3] bg-[#1A1A1A] flex flex-col items-center justify-center gap-2">
-            <span className="text-3xl font-bold text-white/80 tracking-wide">PDF</span>
-            <span className="text-xs text-white/50">Tap to open</span>
+          <div className="relative w-full aspect-[4/3]">
+            <CoverThumb coverPath={material.cover_url} kind="pdf" alt={material.title} />
+            <div className="absolute inset-0 flex items-end justify-center pb-3">
+              <span className="text-xs text-white/90 bg-black/45 px-2 py-1 rounded-full">
+                Tap to open
+              </span>
+            </div>
           </div>
           <div className="px-3 py-2.5">
             <p className="text-sm font-semibold text-text-primary truncate">
@@ -507,6 +514,13 @@ export default function PDFViewerSecure({
               <span className="text-[11px] font-medium text-white/90 bg-black/55 px-2 py-1.5 rounded-full tabular-nums">
                 {visiblePage} / {numPages}
               </span>
+            </div>
+          )}
+
+          {material.cover_url && (
+            <div className="w-full h-16 sm:h-20 shrink-0 relative opacity-90">
+              <CoverThumb coverPath={material.cover_url} kind="pdf" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0A0A0A]" />
             </div>
           )}
 

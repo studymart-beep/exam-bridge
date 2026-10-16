@@ -16,12 +16,15 @@ import {
 } from "@/lib/offline/cache";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
+import CoverThumb from "@/components/shared/CoverThumb";
+import { getCoverSignedUrl } from "@/lib/actions/student/materials";
 
 type MaterialProp = {
   id: string;
   title: string;
   source: string | null;
   source_type?: string | null;
+  cover_url?: string | null;
 };
 
 type VideoProps = {
@@ -61,6 +64,7 @@ export default function VideoPlayerSecure({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
+  const [coverPoster, setCoverPoster] = useState<string | null>(null);
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
@@ -81,6 +85,21 @@ export default function VideoPlayerSecure({
   const [scrubbing, setScrubbing] = useState(false);
 
   const cacheKey = `video:${material.id}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!material.cover_url) {
+      setCoverPoster(null);
+      return;
+    }
+    void (async () => {
+      const res = await getCoverSignedUrl(material.cover_url);
+      if (!cancelled && "url" in res) setCoverPoster(res.url);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [material.cover_url]);
 
   const bumpControls = useCallback(() => {
     setControls(true);
@@ -378,6 +397,7 @@ export default function VideoPlayerSecure({
           : null,
         subjectTitle: subjectTitle || undefined,
         topicTitle: topicTitle || undefined,
+        coverUrl: material.cover_url || undefined,
       };
       await putFile(cacheKey, blob, meta);
       setCached(true);
@@ -430,6 +450,7 @@ export default function VideoPlayerSecure({
           onPointerUp={onSurfacePointer}
         >
           <video
+            poster={coverPoster || undefined}
             ref={videoRef}
             src={url}
             className="w-full h-full object-contain"
@@ -653,12 +674,12 @@ export default function VideoPlayerSecure({
         onClick={() => void openPlayer()}
         className="w-full text-left rounded-2xl overflow-hidden border border-border bg-surface shadow-sm active:scale-[0.99] transition"
       >
-        <div className="relative w-full aspect-video bg-[#0A0A0A]">
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <span className="w-16 h-16 rounded-full bg-white/15 text-white flex items-center justify-center text-2xl pl-1 border border-white/20">
+        <div className="relative w-full aspect-video overflow-hidden">
+          <CoverThumb coverPath={material.cover_url} kind="video" alt={material.title} />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25">
+            <span className="w-16 h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl pl-1 border border-white/25">
               ▶
             </span>
-            <span className="text-xs text-white/60">Video</span>
           </div>
         </div>
         <div className="px-3 py-2.5">

@@ -26,7 +26,11 @@ export default function LogoutButton({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(true);
+        }}
         className="w-full flex items-center justify-between gap-3 px-4 min-h-[56px] text-error hover:bg-red-50 text-left"
       >
         <div>
@@ -44,7 +48,7 @@ export default function LogoutButton({
         onClose={() => setOpen(false)}
         onConfirm={confirm}
         title="Log out?"
-        message="You'll need to sign in again to continue."
+        message="Are you sure you want to log out?"
         confirmLabel="Log Out"
         danger
         loading={pending}

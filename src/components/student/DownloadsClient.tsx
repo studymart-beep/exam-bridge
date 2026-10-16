@@ -14,6 +14,7 @@ import {
 } from "@/lib/offline/cache";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
+import CoverThumb from "@/components/shared/CoverThumb";
 
 type Row = { key: string; meta: CacheMeta };
 
@@ -200,21 +201,12 @@ export default function DownloadsClient() {
                               : "bg-gradient-to-br from-primary-light to-cream"
                           )}
                         >
-                          <div
-                            className={cn(
-                              "w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 text-white",
-                              row.meta.type === "video"
-                                ? "bg-calm"
-                                : row.meta.type === "pdf"
-                                  ? "bg-primary"
-                                  : "bg-accent-dark"
-                            )}
-                          >
-                            {row.meta.type === "video"
-                              ? "VID"
-                              : row.meta.type === "pdf"
-                                ? "PDF"
-                                : "IMG"}
+                          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
+                            <CoverThumb
+                              coverPath={row.meta.coverUrl}
+                              kind={row.meta.type}
+                              alt={row.meta.title}
+                            />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-text-primary truncate">
