@@ -88,7 +88,7 @@ export default async function TopicDetailPage({ params }: Props) {
                 No materials for this topic yet.
               </p>
             ) : (
-              <MaterialsViewer topicId={topicId} materials={materials} />
+              <MaterialsViewer topicId={topicId} materials={materials} subjectTitle={subject.name} topicTitle={topic.title} />
             )}
           </ContentLock>
         </Section>

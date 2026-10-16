@@ -6,11 +6,13 @@ const VERSION = 1;
 
 export type CacheMeta = {
   materialId: string;
-  type: "video" | "pdf";
+  type: "video" | "pdf" | "image";
   title: string;
   size: number;
   downloadedAt: number;
   subscriptionExpiresAt: number | null;
+  subjectTitle?: string;
+  topicTitle?: string;
 };
 
 type CacheRecord = { key: string; blob: Blob; meta: CacheMeta };

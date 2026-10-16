@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Section from "@/components/ui/Section";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
+import PDFViewerSecure from "@/components/student/PDFViewerSecure";
 import {
   listFiles,
   deleteFile,
@@ -40,8 +41,19 @@ export default function DownloadsClient() {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [online, setOnline] = useState(true);
   const [removeKey, setRemoveKey] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
+
+  const [pdfOpen, setPdfOpen] = useState<{
+    blob: Blob;
+    id: string;
+    title: string;
+  } | null>(null);
+  const [videoOpen, setVideoOpen] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -59,6 +71,30 @@ export default function DownloadsClient() {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    const sync = () => setOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
+    sync();
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+    };
+  }, []);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, Map<string, Row[]>>();
+    for (const row of rows) {
+      const subj = row.meta.subjectTitle || "My downloads";
+      const topic = row.meta.topicTitle || "Saved items";
+      if (!map.has(subj)) map.set(subj, new Map());
+      const topics = map.get(subj)!;
+      if (!topics.has(topic)) topics.set(topic, []);
+      topics.get(topic)!.push(row);
+    }
+    return map;
+  }, [rows]);
+
   async function openItem(row: Row) {
     try {
       const file = await getFile(row.key);
@@ -66,14 +102,37 @@ export default function DownloadsClient() {
         showToast("File missing from cache", "error");
         return;
       }
+      if (row.meta.type === "pdf") {
+        setPdfOpen({
+          blob: file.blob,
+          id: row.meta.materialId,
+          title: row.meta.title,
+        });
+        return;
+      }
+      if (row.meta.type === "video") {
+        const url = URL.createObjectURL(file.blob);
+        setVideoOpen({ url, title: row.meta.title });
+        return;
+      }
+      // image — in-app overlay
       const url = URL.createObjectURL(file.blob);
-      // Open in new tab for PDF; video in new tab too
-      window.open(url, "_blank", "noopener,noreferrer");
-      // revoke later
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      setVideoOpen(null);
+      // reuse a simple image fullscreen via videoOpen state pattern — dedicated
+      const imgWin = document.createElement("div");
+      // use videoOpen style for images instead:
+      showToast("Opening image…", "success");
+      // Store as videoOpen-like with image marker via data URL player below
+      setPdfOpen(null);
+      setVideoOpen({ url, title: row.meta.title });
     } catch {
       showToast("Could not open file", "error");
     }
+  }
+
+  function closeVideo() {
+    if (videoOpen?.url) URL.revokeObjectURL(videoOpen.url);
+    setVideoOpen(null);
   }
 
   async function confirmRemove() {
@@ -94,67 +153,147 @@ export default function DownloadsClient() {
   return (
     <>
       <Section title="Offline downloads" tint="blue">
+        {!online && (
+          <p className="text-xs text-text-secondary mb-3 px-1">
+            You&apos;re offline. Only items already saved on this device are available.
+          </p>
+        )}
+
         {loading ? (
           <p className="text-sm text-text-muted text-center py-8">Loading…</p>
         ) : rows.length === 0 ? (
           <div className="text-center py-10 px-4">
             <p className="text-sm text-text-secondary">
-              No downloads yet. Tap the download button inside a video or PDF
-              to save it here.
+              {online
+                ? "No downloads yet. Tap the download button inside a video or PDF to save it here."
+                : "You're offline. Download videos, PDFs, and images while online to access them here."}
             </p>
-            <Link href="/subjects" className="inline-block mt-4">
-              <Button size="sm">Browse subjects</Button>
-            </Link>
+            {online && (
+              <Link href="/subjects" className="inline-block mt-4">
+                <Button size="sm">Browse subjects</Button>
+              </Link>
+            )}
           </div>
         ) : (
-          <ul className="space-y-2.5">
-            {rows.map((row) => (
-              <li
-                key={row.key}
-                className={cn(
-                  "flex items-start gap-3 p-3.5 rounded-2xl border border-white/50 shadow-soft",
-                  row.meta.type === "video"
-                    ? "bg-gradient-to-br from-calm-light to-cream"
-                    : "bg-gradient-to-br from-primary-light to-cream"
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold shrink-0",
-                    row.meta.type === "video"
-                      ? "bg-calm text-white"
-                      : "bg-primary text-white"
-                  )}
-                >
-                  {row.meta.type === "video" ? "VID" : "PDF"}
+          <div className="space-y-6">
+            {Array.from(grouped.entries()).map(([subject, topics]) => (
+              <div key={subject}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <h3 className="font-heading font-bold text-sm text-text-primary">
+                    {subject}
+                  </h3>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-text-primary truncate">
-                    {row.meta.title}
-                  </p>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {formatDate(row.meta.downloadedAt)} ·{" "}
-                    {formatBytes(row.meta.size)}
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={() => void openItem(row)}>
-                      Open
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-error border-error/40"
-                      onClick={() => setRemoveKey(row.key)}
-                    >
-                      Remove
-                    </Button>
+                {Array.from(topics.entries()).map(([topic, items]) => (
+                  <div key={topic} className="mb-3 ml-2">
+                    <p className="text-xs font-semibold text-text-secondary mb-2">
+                      {topic}
+                    </p>
+                    <ul className="space-y-2.5">
+                      {items.map((row) => (
+                        <li
+                          key={row.key}
+                          className={cn(
+                            "flex items-start gap-3 p-3.5 rounded-2xl border border-white/50 shadow-soft",
+                            row.meta.type === "video"
+                              ? "bg-gradient-to-br from-calm-light to-cream"
+                              : "bg-gradient-to-br from-primary-light to-cream"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "w-11 h-11 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 text-white",
+                              row.meta.type === "video"
+                                ? "bg-calm"
+                                : row.meta.type === "pdf"
+                                  ? "bg-primary"
+                                  : "bg-accent-dark"
+                            )}
+                          >
+                            {row.meta.type === "video"
+                              ? "VID"
+                              : row.meta.type === "pdf"
+                                ? "PDF"
+                                : "IMG"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-text-primary truncate">
+                              {row.meta.title}
+                            </p>
+                            <p className="text-xs text-text-muted mt-0.5">
+                              {formatDate(row.meta.downloadedAt)} ·{" "}
+                              {formatBytes(row.meta.size)}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <Button size="sm" onClick={() => void openItem(row)}>
+                                Open
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-error border-error/40"
+                                onClick={() => setRemoveKey(row.key)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-              </li>
+                ))}
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </Section>
+
+      {pdfOpen && (
+        <PDFViewerSecure
+          material={{
+            id: pdfOpen.id,
+            title: pdfOpen.title,
+            source: null,
+          }}
+          offlineBlob={pdfOpen.blob}
+          forceOpen
+          onClosed={() => setPdfOpen(null)}
+        />
+      )}
+
+      {videoOpen && (
+        <div
+          className="fixed inset-0 z-[99999] bg-black flex flex-col"
+          style={{
+            width: "100vw",
+            height: "100dvh",
+            paddingTop: "env(safe-area-inset-top)",
+          }}
+        >
+          <div className="flex items-center justify-between px-3 py-2 text-white">
+            <p className="text-sm font-medium truncate pr-2">{videoOpen.title}</p>
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-white/15"
+              onClick={closeVideo}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <video
+              src={videoOpen.url}
+              controls
+              playsInline
+              className="max-w-full max-h-full w-full"
+              controlsList="nodownload"
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!removeKey}

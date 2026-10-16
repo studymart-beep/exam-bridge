@@ -24,6 +24,15 @@ type MaterialProp = {
   source_type?: string | null;
 };
 
+type VideoProps = {
+  material: MaterialProp;
+  offlineBlob?: Blob | null;
+  forceOpen?: boolean;
+  onClosed?: () => void;
+  subjectTitle?: string;
+  topicTitle?: string;
+};
+
 const SPEEDS = [0.5, 1, 1.25, 1.5, 2] as const;
 
 function formatTime(s: number): string {
@@ -35,9 +44,12 @@ function formatTime(s: number): string {
 
 export default function VideoPlayerSecure({
   material,
-}: {
-  material: MaterialProp;
-}) {
+  offlineBlob = null,
+  forceOpen = false,
+  onClosed,
+  subjectTitle,
+  topicTitle,
+}: VideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -364,6 +376,8 @@ export default function VideoPlayerSecure({
         subscriptionExpiresAt: res.subscriptionExpiresAt
           ? new Date(res.subscriptionExpiresAt).getTime()
           : null,
+        subjectTitle: subjectTitle || undefined,
+        topicTitle: topicTitle || undefined,
       };
       await putFile(cacheKey, blob, meta);
       setCached(true);

@@ -1,5 +1,6 @@
 import { StudentMenuProvider } from "@/components/student/StudentMenuContext";
 import { getCurrentProfileBrief, getCurrentProfile, isSubscriptionActive } from "@/lib/data/profile";
+import OfflineBanner from "@/components/student/OfflineBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,8 @@ export default async function StudentLayout({
   const profile = await getCurrentProfile();
   // Guest pages (e.g. /subjects preview) — no app shell
   if (!profile) {
-    return <>{children}</>;
+    return <><OfflineBanner />
+            {children}</>;
   }
 
   const brief = await getCurrentProfileBrief();
@@ -23,6 +25,7 @@ export default async function StudentLayout({
       avatarUrl={brief.avatarUrl}
       isSubscribed={subscribed}
     >
+      <OfflineBanner />
       {children}
     </StudentMenuProvider>
   );

@@ -19,9 +19,13 @@ type Material = {
 export default function MaterialsViewer({
   topicId,
   materials,
+  subjectTitle,
+  topicTitle,
 }: {
   topicId: string;
   materials: Material[];
+  subjectTitle?: string;
+  topicTitle?: string;
 }) {
   const { showToast } = useToast();
   const [pending, startTransition] = useTransition();
@@ -40,6 +44,8 @@ export default function MaterialsViewer({
                 source: m.source,
                 source_type: m.source_type,
               }}
+              subjectTitle={subjectTitle}
+              topicTitle={topicTitle}
             />
           )}
           {m.type === "pdf" && (
@@ -50,6 +56,8 @@ export default function MaterialsViewer({
                 source: m.source,
                 source_type: m.source_type,
               }}
+              subjectTitle={subjectTitle}
+              topicTitle={topicTitle}
             />
           )}
         </div>
