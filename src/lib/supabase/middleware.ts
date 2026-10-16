@@ -147,6 +147,7 @@ export async function updateSession(request: NextRequest) {
   const protectedPrefixes = [
     "/dashboard",
     "/cbt",
+    "/downloads",
     "/progress",
     "/results",
     "/notifications",

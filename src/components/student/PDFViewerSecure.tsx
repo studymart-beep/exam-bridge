@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
-import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
   getFile,
@@ -11,6 +10,7 @@ import {
   type CacheMeta,
 } from "@/lib/offline/cache";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 
 type MaterialProp = {
   id: string;
@@ -30,6 +30,7 @@ export default function PDFViewerSecure({
   const [loading, setLoading] = useState(false);
   const [numPages, setNumPages] = useState(0);
   const [visiblePage, setVisiblePage] = useState(1);
+  const { showToast } = useToast();
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -258,8 +259,10 @@ export default function PDFViewerSecure({
       };
       await putFile(cacheKey, blob, meta);
       setCached(true);
+      showToast("Saved to downloads", "success");
     } catch {
       setError("Download failed");
+      showToast("Download failed", "error");
     } finally {
       setDownloading(false);
     }
@@ -284,16 +287,6 @@ export default function PDFViewerSecure({
         </div>
       </button>
 
-      <Button
-        size="sm"
-        variant="outline"
-        className="w-full min-h-[44px] md:w-auto"
-        disabled={downloading || cached}
-        loading={downloading}
-        onClick={() => void downloadOffline()}
-      >
-        {cached ? "Downloaded" : "Download for offline"}
-      </Button>
 
       {error && !open && (
         <p className="text-sm text-error text-center">{error}</p>
@@ -330,17 +323,34 @@ export default function PDFViewerSecure({
             </div>
           )}
 
-          <button
-            type="button"
+          <div
             className={cn(
-              "absolute top-3 right-3 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg transition-opacity",
+              "absolute top-3 right-3 z-30 flex gap-2 transition-opacity",
               controls ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
-            onClick={closeReader}
-            aria-label="Close"
           >
-            ✕
-          </button>
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-sm disabled:opacity-40"
+              disabled={downloading || cached}
+              onClick={(e) => {
+                e.stopPropagation();
+                void downloadOffline();
+              }}
+              aria-label="Download for offline"
+              title={cached ? "Downloaded" : "Download"}
+            >
+              {downloading ? "…" : cached ? "✓" : "↓"}
+            </button>
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-lg"
+              onClick={closeReader}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
 
           {numPages > 0 && (
             <div

@@ -7,7 +7,6 @@ import {
   useState,
   type PointerEvent as RPointerEvent,
 } from "react";
-import Button from "@/components/ui/Button";
 import { getMaterialSignedUrl } from "@/lib/actions/student/materials";
 import {
   getFile,
@@ -16,6 +15,7 @@ import {
   type CacheMeta,
 } from "@/lib/offline/cache";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 
 type MaterialProp = {
   id: string;
@@ -48,6 +48,7 @@ export default function VideoPlayerSecure({
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
   const [cached, setCached] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
@@ -366,8 +367,10 @@ export default function VideoPlayerSecure({
       };
       await putFile(cacheKey, blob, meta);
       setCached(true);
+      showToast("Saved to downloads", "success");
     } catch {
       setError("Download failed");
+      showToast("Download failed", "error");
     } finally {
       setDownloading(false);
     }
@@ -464,6 +467,19 @@ export default function VideoPlayerSecure({
               !controls && "opacity-0 pointer-events-none"
             )}
           >
+            <button
+              type="button"
+              className="min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-sm disabled:opacity-40"
+              disabled={downloading || cached}
+              onClick={(e) => {
+                e.stopPropagation();
+                void downloadOffline();
+              }}
+              aria-label="Download for offline"
+              title={cached ? "Downloaded" : downloading ? `${dlProgress}%` : "Download"}
+            >
+              {downloading ? "…" : cached ? "✓" : "↓"}
+            </button>
             <button
               type="button"
               className="min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white text-sm"
@@ -639,20 +655,6 @@ export default function VideoPlayerSecure({
         </div>
       </button>
 
-      <Button
-        size="sm"
-        variant="outline"
-        className="w-full min-h-[44px] md:w-auto"
-        disabled={downloading || cached}
-        loading={downloading}
-        onClick={() => void downloadOffline()}
-      >
-        {cached
-          ? "Downloaded"
-          : downloading
-            ? `Downloading ${dlProgress}%`
-            : "Download for offline"}
-      </Button>
 
       {error && !open && (
         <p className="text-sm text-error text-center">{error}</p>

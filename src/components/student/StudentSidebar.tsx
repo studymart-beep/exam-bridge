@@ -18,6 +18,7 @@ const mainNav = [
   { href: "/dashboard", label: "Home" },
   { href: "/subjects", label: "Subjects" },
   { href: "/cbt", label: "CBT" },
+  { href: "/downloads", label: "Downloads" },
   { href: "/progress", label: "Progress" },
   { href: "/results", label: "Results" },
   { href: "/profile", label: "Profile" },
