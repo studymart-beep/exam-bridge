@@ -3,19 +3,24 @@
 import { useEffect } from "react";
 import AdminInstallPrompt from "@/components/pwa/AdminInstallPrompt";
 
-/** Swaps student manifest for admin manifest while on /admin routes. */
+/**
+ * Ensures the browser uses the admin manifest while on /admin/* routes
+ * (overrides the root student manifest for install / launch).
+ */
 export default function AdminPwaMeta() {
   useEffect(() => {
+    const origin = window.location.origin;
+
     let link = document.querySelector(
       'link[rel="manifest"]'
     ) as HTMLLinkElement | null;
-    const prev = link?.href;
+    const prevHref = link?.getAttribute("href");
     if (!link) {
       link = document.createElement("link");
       link.rel = "manifest";
       document.head.appendChild(link);
     }
-    link.href = "/admin-manifest.json";
+    link.href = `${origin}/admin-manifest.json`;
 
     let theme = document.querySelector(
       'meta[name="theme-color"]'
@@ -26,23 +31,35 @@ export default function AdminPwaMeta() {
       theme.name = "theme-color";
       document.head.appendChild(theme);
     }
-    theme.content = "#14532D";
+    theme.content = "#166534";
 
     let apple = document.querySelector(
       'link[rel="apple-touch-icon"]'
     ) as HTMLLinkElement | null;
-    const prevApple = apple?.href;
+    const prevApple = apple?.getAttribute("href");
     if (!apple) {
       apple = document.createElement("link");
       apple.rel = "apple-touch-icon";
       document.head.appendChild(apple);
     }
-    apple.href = "/icons/admin-192.png";
+    apple.href = `${origin}/icons/admin-192.png`;
+
+    let appleTitle = document.querySelector(
+      'meta[name="apple-mobile-web-app-title"]'
+    ) as HTMLMetaElement | null;
+    const prevTitle = appleTitle?.content;
+    if (!appleTitle) {
+      appleTitle = document.createElement("meta");
+      appleTitle.name = "apple-mobile-web-app-title";
+      document.head.appendChild(appleTitle);
+    }
+    appleTitle.content = "Exam Bridge Admin";
 
     return () => {
-      if (link && prev) link.href = prev;
-      if (theme && prevTheme) theme.content = prevTheme;
-      if (apple && prevApple) apple.href = prevApple;
+      if (link && prevHref != null) link.setAttribute("href", prevHref);
+      if (theme && prevTheme != null) theme.content = prevTheme;
+      if (apple && prevApple != null) apple.setAttribute("href", prevApple);
+      if (appleTitle && prevTitle != null) appleTitle.content = prevTitle;
     };
   }, []);
 
