@@ -3,6 +3,7 @@ import Image from "next/image";
 import StudentHeader from "@/components/student/StudentHeader";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Section from "@/components/ui/Section";
 import SubscriptionPrompt from "@/components/student/SubscriptionPrompt";
 import {
   getCurrentProfile,
@@ -215,6 +216,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Stats */}
+        <Section title="Overview" tint="green">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { n: subjectsCount, l: "Subjects", bg: "bg-primary-light/60 border-primary/20", icon: "📚" },
@@ -232,6 +234,7 @@ export default async function DashboardPage() {
             </div>
           ))}
         </div>
+        </Section>
 
         {/* Progress ring + 7 day */}
         <Card className="flex flex-col sm:flex-row items-center gap-6 p-5">
@@ -382,6 +385,7 @@ export default async function DashboardPage() {
         )}
 
         {/* Quick tiles */}
+        <Section title="Quick actions" tint="gold">
         <div className="grid grid-cols-2 gap-3">
           {[
             { ...quickTiles[0], iconBg: "bg-primary-light text-primary", icon: "📖" },
@@ -402,14 +406,12 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </div>
+        </Section>
 
         {/* Activity */}
         {activity.length > 0 && (
-          <div>
-            <h2 className="font-heading font-semibold text-primary mb-2 pl-2 border-l-4 border-accent">
-              Recent Activity
-            </h2>
-            <Card className="space-y-2">
+          <Section title="Recent Activity" tint="blue">
+            <Card className="space-y-2" tint="blue">
               {activity.map((a) => (
                 <div
                   key={a.id}
@@ -422,7 +424,7 @@ export default async function DashboardPage() {
                 </div>
               ))}
             </Card>
-          </div>
+          </Section>
         )}
       </div>
     </div>

@@ -3,6 +3,8 @@ import Image from "next/image";
 import Logo from "@/components/brand/Logo";
 import Button from "@/components/ui/Button";
 import { listPublishedSubjects } from "@/lib/data/student/subjects";
+import SubjectCard from "@/components/student/SubjectCard";
+import Section from "@/components/ui/Section";
 
 export const dynamic = "force-dynamic";
 
@@ -112,28 +114,24 @@ export default async function LandingPage() {
       {/* Subjects */}
       {subjects.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pb-12">
-          <h2 className="font-heading text-2xl font-bold text-text-primary text-center mb-6">
-            Subjects
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {subjects.map((s) => (
-              <Link
-                key={s.id}
-                href={`/subjects/${s.slug}`}
-                className="rounded-2xl border border-border bg-surface p-4 hover:border-primary/40 transition-colors min-h-[88px]"
-              >
-                <div
-                  className="w-9 h-9 rounded-lg mb-2 flex items-center justify-center text-white text-sm font-bold"
-                  style={{ backgroundColor: s.color || "#166534" }}
-                >
-                  {(s.letter || s.name[0] || "?").slice(0, 1)}
-                </div>
-                <p className="text-sm font-semibold text-text-primary line-clamp-2">
-                  {s.name}
-                </p>
-              </Link>
-            ))}
-          </div>
+          <Section title="Subjects" tint="green" className="max-w-6xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {subjects.map((s, idx) => (
+                <SubjectCard
+                  key={s.id}
+                  index={idx}
+                  subject={{
+                    id: s.id,
+                    name: s.name,
+                    slug: s.slug,
+                    letter: s.letter || s.name.charAt(0),
+                    color: s.color || "#166534",
+                    bgColor: s.bg_color || "#DCFCE7",
+                  }}
+                />
+              ))}
+            </div>
+          </Section>
         </section>
       )}
 

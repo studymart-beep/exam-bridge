@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import StudentHeader from "@/components/student/StudentHeader";
 import ContentLock from "@/components/student/ContentLock";
 import MaterialsViewer from "@/components/student/MaterialsViewer";
+import Section from "@/components/ui/Section";
 import { getSubjectBySlug } from "@/lib/data/student/subjects";
 import { getTopicById } from "@/lib/data/subjects";
 import { listMaterialsByTopic } from "@/lib/data/student/materials";
@@ -47,29 +48,38 @@ export default async function TopicDetailPage({ params }: Props) {
         backHref={`/subjects/${slug}`}
         userName={profile?.full_name || "Student"}
       />
-      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-5">
+      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto space-y-4">
         {topic.description && (
-          <p className="text-sm text-text-secondary">{topic.description}</p>
+          <Section tint="gold">
+            <p className="text-sm text-text-secondary leading-relaxed">
+              {topic.description}
+            </p>
+          </Section>
         )}
 
-        <h3 className="font-heading font-semibold">Materials</h3>
-        <ContentLock label="Subscribe to view videos, PDFs, and images.">
-          {materials.length === 0 ? (
-            <p className="text-sm text-text-muted p-4">No materials for this topic yet.</p>
-          ) : (
-            <MaterialsViewer topicId={topicId} materials={materials} />
-          )}
-        </ContentLock>
+        <Section title="Materials" tint="green">
+          <ContentLock label="Subscribe to view videos, PDFs, and images.">
+            {materials.length === 0 ? (
+              <p className="text-sm text-text-muted py-4 text-center">
+                No materials for this topic yet.
+              </p>
+            ) : (
+              <MaterialsViewer topicId={topicId} materials={materials} />
+            )}
+          </ContentLock>
+        </Section>
 
         {topicExamId && (
-          <ContentLock label="Subscribe to start this topic CBT.">
-            <Link
-              href={`/cbt/${topicExamId}`}
-              className="block text-center p-4 rounded-2xl bg-primary text-white font-semibold text-sm"
-            >
-              Start topic CBT
-            </Link>
-          </ContentLock>
+          <Section title="Practice" tint="blue">
+            <ContentLock label="Subscribe to start this topic CBT.">
+              <Link
+                href={`/cbt/${topicExamId}`}
+                className="card-gloss block text-center p-4 rounded-[18px] bg-gradient-to-r from-primary to-primary-dark text-white font-heading font-bold text-sm shadow-card hover:-translate-y-0.5 transition-all"
+              >
+                Start topic CBT →
+              </Link>
+            </ContentLock>
+          </Section>
         )}
       </div>
     </div>

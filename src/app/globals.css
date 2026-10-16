@@ -10,8 +10,15 @@
   }
 
   body {
-    @apply bg-background text-text-primary font-body antialiased;
-    background-color: #BBF7D0;
+    @apply text-text-primary font-body antialiased min-h-screen;
+    background-color: #DCFCE7;
+    background-image: linear-gradient(
+      180deg,
+      #DCFCE7 0%,
+      #F0FDF4 40%,
+      #FEF9C3 100%
+    );
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -32,7 +39,6 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Rotating card tints for grids: green → gold → blue */
   .card-tint-0 {
     @apply bg-primary-light border-border-green;
   }
@@ -41,6 +47,43 @@
   }
   .card-tint-2 {
     @apply bg-calm-light border-border-blue;
+  }
+
+  /* Premium card gloss overlay */
+  .card-gloss {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-gloss::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0) 45%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+  }
+
+  /* Soft section shell */
+  .section-shell {
+    @apply rounded-3xl border border-border/60 p-4 sm:p-5;
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 4px 24px -8px rgb(22 101 52 / 0.08);
+  }
+  .section-shell-green {
+    background: rgba(220, 252, 231, 0.55);
+    border-color: rgba(134, 239, 172, 0.5);
+  }
+  .section-shell-gold {
+    background: rgba(254, 249, 195, 0.55);
+    border-color: rgba(253, 230, 138, 0.6);
+  }
+  .section-shell-blue {
+    background: rgba(219, 234, 254, 0.5);
+    border-color: rgba(147, 197, 253, 0.5);
   }
 }
 
@@ -52,4 +95,13 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+@keyframes pass-pop {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-pass-pop {
+  animation: pass-pop 0.55s ease-out;
 }
