@@ -59,7 +59,6 @@ export default function PDFViewerSecure({
   const [downloading, setDownloading] = useState(false);
   const [open, setOpen] = useState(false);
   const [controls, setControls] = useState(true);
-  const [rotateHint, setRotateHint] = useState(false);
   const pdfDocRef = useRef<PDFDocumentProxy | null>(null);
   const rendered = useRef<Set<number>>(new Set());
   const renderTasks = useRef<Map<number, RenderTask>>(new Map());
@@ -221,8 +220,6 @@ export default function PDFViewerSecure({
     document.body.style.overflow = "hidden";
     window.history.pushState({ ebPdfFs: true }, "");
     bumpControls();
-    setRotateHint(true);
-    setTimeout(() => setRotateHint(false), 2000);
     fsTried.current = false;
     if (!pdfDocRef.current) await load();
     // Fullscreen after paint
@@ -241,7 +238,6 @@ export default function PDFViewerSecure({
     }
     setOpen(false);
     document.body.style.overflow = "";
-    setRotateHint(false);
     onClosed?.();
   }
 
@@ -317,19 +313,23 @@ export default function PDFViewerSecure({
     })();
   }, [open, numPages, renderPageInto]);
 
-  // Resize / orientation — re-render
+  // Auto-reflow on phone rotate / resize — no orientation.lock, no CSS rotate
   useEffect(() => {
     if (!open) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const onResize = () => {
+
+    const reflow = () => {
       const root = scrollRef.current;
       if (root && root.scrollHeight > 0) {
         scrollRatioRef.current = root.scrollTop / root.scrollHeight;
       }
       if (timer) clearTimeout(timer);
+      // orientationchange fires before layout settles — delay slightly
       timer = setTimeout(() => {
         rendered.current.clear();
         pageRefs.current.forEach((el, pageNum) => {
+          // clear old canvas so width remeasure is clean
+          el.innerHTML = "";
           void renderPageInto(pageNum, el);
         });
         requestAnimationFrame(() => {
@@ -338,14 +338,22 @@ export default function PDFViewerSecure({
             r.scrollTop = scrollRatioRef.current * r.scrollHeight;
           }
         });
-      }, 200);
+      }, 280);
     };
-    window.addEventListener("resize", onResize);
-    window.addEventListener("orientationchange", onResize);
+
+    window.addEventListener("resize", reflow);
+    window.addEventListener("orientationchange", reflow);
+    const mq = window.matchMedia("(orientation: landscape)");
+    const onMq = () => reflow();
+    if (mq.addEventListener) mq.addEventListener("change", onMq);
+    else mq.addListener(onMq);
+
     return () => {
       if (timer) clearTimeout(timer);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
+      window.removeEventListener("resize", reflow);
+      window.removeEventListener("orientationchange", reflow);
+      if (mq.removeEventListener) mq.removeEventListener("change", onMq);
+      else mq.removeListener(onMq);
     };
   }, [open, renderPageInto]);
 
@@ -461,13 +469,7 @@ export default function PDFViewerSecure({
             </div>
           )}
 
-          {rotateHint && (
-            <div className="absolute top-14 inset-x-0 z-40 flex justify-center pointer-events-none">
-              <span className="text-xs bg-black/75 text-white px-3 py-1.5 rounded-full max-w-[90%] text-center">
-                Rotate your phone to switch between portrait and landscape
-              </span>
-            </div>
-          )}
+          
 
           <div
             className={cn(
