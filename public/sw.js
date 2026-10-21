@@ -1,5 +1,5 @@
 /* Exam Bridge service worker — app shell + offline fallback */
-const CACHE_VERSION = "eb-v27-1";
+const CACHE_VERSION = "eb-v28-1";
 const SHELL = [
   "/offline.html",
   "/manifest.json",
