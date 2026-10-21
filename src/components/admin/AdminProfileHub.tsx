@@ -13,6 +13,7 @@ import {
 } from "@/lib/actions/admin/profile";
 import { saveSettings } from "@/lib/actions/admin/settings";
 import LogoutButton from "@/components/shared/LogoutButton";
+import BiometricSetup from "@/components/shared/BiometricSetup";
 import { cn } from "@/lib/utils";
 import AvatarUpload from "@/components/shared/AvatarUpload";
 import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
@@ -236,6 +237,8 @@ export default function AdminProfileHub({
         </Link>
         <LogoutButton variant="admin" />
       </div>
+
+      <BiometricSetup />
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit profile">
         <div className="space-y-4">

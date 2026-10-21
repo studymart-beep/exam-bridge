@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Logo from "@/components/brand/Logo";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import BiometricLoginButton from "@/components/shared/BiometricLoginButton";
 import Button from "@/components/ui/Button";
 import { signInAdmin } from "@/app/actions/auth";
 import type { AuthResult } from "@/app/actions/auth";
@@ -56,6 +57,7 @@ export default function AdminLoginPage() {
           <Button type="submit" fullWidth loading={pending}>
             Sign in
           </Button>
+          <BiometricLoginButton variant="admin" />
         </form>
       </div>
     </div>

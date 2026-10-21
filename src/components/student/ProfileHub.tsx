@@ -13,6 +13,7 @@ import {
   changePassword,
 } from "@/lib/actions/student/profile";
 import LogoutButton from "@/components/shared/LogoutButton";
+import BiometricSetup from "@/components/shared/BiometricSetup";
 import { cn } from "@/lib/utils";
 import AvatarUpload from "@/components/shared/AvatarUpload";
 import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
@@ -314,6 +315,8 @@ export default function ProfileHub({
         })}
         <LogoutButton variant="student" />
       </div>
+
+      <BiometricSetup />
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit profile">
         <div className="space-y-4">

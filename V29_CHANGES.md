@@ -1,16 +1,27 @@
-# Exam Bridge v29 — New logo everywhere in the app UI
+# Exam Bridge v29 (Passkeys) — changes
 
-## What changed
-- `public/logo.png` — replaced with the new green/gold book-and-lamp image
-  (used by Logo component in student + admin headers, sidebars, login, landing, SEO)
-- Student PWA icons regenerated from the same image (full-bleed)
-- `public/sw.js` → CACHE_VERSION `eb-v29-1`
+## Added
+- SETUP_V29.sql — user_passkeys + passkey_challenges
+- SETUP_V29.md
+- src/lib/passkeys/rp.ts
+- src/lib/actions/passkeys.ts
+- src/components/shared/BiometricSetup.tsx
+- src/components/shared/BiometricLoginButton.tsx
 
-## What did NOT change
-- Admin PWA home-screen icons (`admin-192.png`, `admin-512.png`, maskable)
-- `public/admin-manifest.json`
+## Changed
+- src/components/student/LoginForm.tsx — biometric button
+- src/app/(admin)/admin/login/page.tsx — biometric button
+- src/components/student/ProfileHub.tsx — BiometricSetup section
+- src/components/admin/AdminProfileHub.tsx — BiometricSetup section
 
-## Result
-- Student app UI + student PWA icon → new logo
-- Admin pages inside the app → new logo (via same `/logo.png`)
-- Admin installed PWA icon on phone → still the previous admin icon
+## Libraries (already in package.json)
+- @simplewebauthn/browser
+- @simplewebauthn/server
+
+## Verified (no code change needed)
+- InstallPrompt + ServiceWorkerRegister in root layout
+- admin-manifest.json start_url = /admin/login
+
+## Assumptions
+- Session after WebAuthn via admin.generateLink (magiclink) + verifyOtp(token_hash)
+- Service role required for challenges + generateLink

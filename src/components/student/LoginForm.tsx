@@ -5,6 +5,7 @@ import Link from "next/link";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
+import BiometricLoginButton from "@/components/shared/BiometricLoginButton";
 import { signInStudent } from "@/app/actions/auth";
 
 export default function LoginForm() {
@@ -56,6 +57,7 @@ export default function LoginForm() {
       <Button type="submit" fullWidth loading={loading}>
         Log in
       </Button>
+      <BiometricLoginButton variant="student" />
     </form>
   );
 }
