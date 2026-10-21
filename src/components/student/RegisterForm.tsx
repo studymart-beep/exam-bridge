@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 import { signUpStudent } from "@/app/actions/auth";
 import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
@@ -63,8 +64,21 @@ export default function RegisterForm() {
           ))}
         </select>
       </div>
-      <Input name="password" type="password" label="Password" placeholder="Min 6 characters" required />
-      <Input name="confirmPassword" type="password" label="Confirm password" required />
+      <PasswordInput
+        name="password"
+        label="Password"
+        placeholder="Min 6 characters"
+        required
+        autoComplete="new-password"
+        minLength={6}
+      />
+      <PasswordInput
+        name="confirmPassword"
+        label="Confirm password"
+        required
+        autoComplete="new-password"
+        minLength={6}
+      />
       <label className="flex items-start gap-2 text-sm text-text-secondary">
         <input type="checkbox" name="terms" required className="mt-1" />
         I agree to the terms of use

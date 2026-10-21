@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Logo from "@/components/brand/Logo";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 import { signInAdmin } from "@/app/actions/auth";
 import type { AuthResult } from "@/app/actions/auth";
@@ -42,7 +43,7 @@ export default function AdminLoginPage() {
             placeholder="admin@example.com"
           />
           <div>
-            <Input label="Password" name="password" type="password" required />
+            <PasswordInput label="Password" name="password" required autoComplete="current-password" />
             <div className="mt-1.5 text-right">
               <a
                 href="/forgot-password"

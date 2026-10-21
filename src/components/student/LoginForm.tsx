@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 import { signInStudent } from "@/app/actions/auth";
 
@@ -36,9 +37,8 @@ export default function LoginForm() {
         autoComplete="email"
       />
       <div>
-        <Input
+        <PasswordInput
           name="password"
-          type="password"
           label="Password"
           placeholder="Your password"
           required

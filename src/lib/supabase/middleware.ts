@@ -123,8 +123,17 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(u);
   }
 
-  // Logged-in users away from auth pages
-  if (user && (path === "/login" || path === "/register" || path === "/")) {
+  // Auth callback (password recovery / OAuth code exchange) — always public
+  if (path.startsWith("/auth/")) {
+    return supabaseResponse;
+  }
+
+  // Logged-in users away from login/register/landing — BUT keep /reset-password
+  // so recovery sessions can set a new password without being bounced to dashboard
+  if (
+    user &&
+    (path === "/login" || path === "/register" || path === "/")
+  ) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")

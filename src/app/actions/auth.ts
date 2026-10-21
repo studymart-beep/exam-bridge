@@ -119,8 +119,11 @@ export async function requestPasswordReset(
     : undefined;
 
   // Always succeed-looking for privacy (Supabase still rate-limits)
+  // Must go through /auth/callback so the recovery code becomes a session
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: base ? `${base}/reset-password` : undefined,
+    redirectTo: base
+      ? `${base}/auth/callback?next=/reset-password`
+      : undefined,
   });
 
   return { success: true };
