@@ -1,10 +1,8 @@
 import type { MetadataRoute } from "next";
-
-const BASE =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://exam-bridge-one.vercel.app";
+import { getSiteUrl } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const BASE = getSiteUrl();
   const paths = [
     { path: "/", priority: 1.0 },
     { path: "/login", priority: 0.8 },

@@ -3,10 +3,9 @@ import { ToastProvider } from "@/components/ui/Toast";
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import "./globals.css";
+import { getSiteUrl } from "@/lib/site";
 
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://exam-bridge-one.vercel.app";
+const SITE = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://exam-bridge-one.vercel.app";
+import { getSiteUrl } from "@/lib/site";
 
 export function pageMeta(opts: {
   title: string;
   description: string;
   path: string;
 }): Metadata {
+  const SITE = getSiteUrl();
   const url = `${SITE}${opts.path}`;
   return {
     title: opts.title,
