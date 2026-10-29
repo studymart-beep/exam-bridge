@@ -2,10 +2,42 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { attachSubjectsForUser } from "@/lib/data/student/mySubjects";
 
 export type AuthResult = { error?: string; success?: boolean };
 
 const GENERIC_AUTH_ERROR = "Invalid email or password.";
+
+/** subjectIds arrives either as a JSON array or repeated/comma-separated ids */
+async function countActiveSubjects(): Promise<number> {
+  try {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("subjects")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true);
+    return count || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function parseSubjectIds(raw: FormDataEntryValue | null): string[] {
+  if (Array.isArray(raw)) {
+    return raw.flatMap((v) => String(v).split(",")).map((s) => s.trim()).filter(Boolean);
+  }
+  const text = String(raw ?? "").trim();
+  if (!text) return [];
+  if (text.startsWith("[")) {
+    try {
+      const arr = JSON.parse(text);
+      if (Array.isArray(arr)) return arr.map((v) => String(v)).filter(Boolean);
+    } catch {
+      /* fall through */
+    }
+  }
+  return text.split(",").map((s) => s.trim()).filter(Boolean);
+}
 
 export async function signUpStudent(formData: FormData): Promise<AuthResult> {
   const email = String(formData.get("email") || "").trim();
@@ -24,8 +56,16 @@ export async function signUpStudent(formData: FormData): Promise<AuthResult> {
     return { error: "Password must be at least 6 characters." };
   }
 
+  const subjectIds = parseSubjectIds(formData.get("subjectIds"));
+  if (!subjectIds.length) {
+    const available = await countActiveSubjects();
+    if (available > 0) {
+      return { error: "Select at least one subject you are studying." };
+    }
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -33,11 +73,21 @@ export async function signUpStudent(formData: FormData): Promise<AuthResult> {
         full_name: fullName,
         phone,
         state_of_origin: stateOfOrigin,
+        subject_ids: subjectIds,
       },
     },
   });
 
   if (error) return { error: error.message };
+
+  // Persist subject picks against the new profile (handle_new_user trigger
+  // creates the row). Works whether or not email confirmation is enabled.
+  const userId = data.user?.id;
+  if (userId && subjectIds.length) {
+    const res = await attachSubjectsForUser(userId, subjectIds);
+    if (res.error) return { error: res.error };
+  }
+
   redirect("/dashboard");
 }
 

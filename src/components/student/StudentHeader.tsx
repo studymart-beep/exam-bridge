@@ -44,12 +44,12 @@ export default function StudentHeader({
       .toUpperCase() || "ST";
 
   return (
-    <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur border-b border-border">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-2">
+    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/60">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-2">
         <button
           type="button"
           onClick={() => openSidebar?.()}
-          className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-secondary hover:bg-primary-light hover:text-primary"
+          className="lg:hidden min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl bg-surface/80 border border-border text-text-primary hover:bg-primary-light hover:text-primary shadow-soft"
           aria-label="Open menu"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,13 +59,13 @@ export default function StudentHeader({
         {showBack ? (
           <Link
             href={backHref}
-            className="text-primary text-sm font-medium min-h-[44px] flex items-center"
+            className="text-primary text-sm font-semibold min-h-[44px] flex items-center"
           >
             ← Back
           </Link>
         ) : null}
         {title ? (
-          <h1 className="font-heading font-semibold text-text-primary text-base flex-1 truncate">
+          <h1 className="font-heading font-extrabold text-text-primary text-lg flex-1 truncate">
             {title}
           </h1>
         ) : (
@@ -89,7 +89,7 @@ export default function StudentHeader({
             />
           </svg>
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-coral text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-background">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}

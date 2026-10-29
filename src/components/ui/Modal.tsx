@@ -61,21 +61,21 @@ export default function Modal({
         className={cn(
           "bg-surface shadow-elevated flex flex-col w-full",
           fullScreenOnMobile
-            ? "h-[100dvh] sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl border-0 sm:border sm:border-border"
-            : "max-h-[90vh] rounded-2xl border border-border m-4",
+            ? "h-[100dvh] sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-3xl border-0 sm:border sm:border-border"
+            : "max-h-[90vh] rounded-3xl border border-border m-4",
           sizes[size],
           "sm:mx-auto"
         )}
       >
         {title && (
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-surface shrink-0">
-            <h2 className="font-heading font-semibold text-text-primary text-base truncate">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3.5 border-b border-border bg-surface shrink-0">
+            <h2 className="font-heading font-extrabold text-text-primary text-base truncate">
               {title}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-muted hover:bg-primary-light hover:text-primary"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-text-muted hover:bg-primary-light hover:text-primary"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

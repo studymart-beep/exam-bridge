@@ -11,7 +11,7 @@ import {
   updateAdminProfile,
   changeAdminPassword,
 } from "@/lib/actions/admin/profile";
-import { saveSettings } from "@/lib/actions/admin/settings";
+import SettingsForm from "@/components/admin/SettingsForm";
 import LogoutButton from "@/components/shared/LogoutButton";
 import BiometricSetup from "@/components/shared/BiometricSetup";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,11 @@ type Props = {
     bank_name: string;
     account_name: string;
     account_number: string;
+    telegram_support_url: string;
+    payment_mode: string;
+    flutterwave_public_key: string;
+    flutterwave_secret_key?: string;
+    flutterwave_webhook_secret?: string;
   };
 };
 
@@ -64,11 +69,8 @@ export default function AdminProfileHub({
   const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
-  const [price, setPrice] = useState(settings.subscription_price);
-  const [bank, setBank] = useState(settings.bank_name);
-  const [accName, setAccName] = useState(settings.account_name);
-  const [accNum, setAccNum] = useState(settings.account_number);
   const [pending, startTransition] = useTransition();
+  void pending;
 
   function saveProfile() {
     startTransition(async () => {
@@ -99,22 +101,6 @@ export default function AdminProfileHub({
         setCurPw("");
         setNewPw("");
         setConfirmPw("");
-      }
-    });
-  }
-
-  function saveAccountSettings() {
-    const fd = new FormData();
-    fd.set("subscription_price", price);
-    fd.set("bank_name", bank);
-    fd.set("account_name", accName);
-    fd.set("account_number", accNum);
-    startTransition(async () => {
-      const res = await saveSettings(fd);
-      if (!res.success) showToast(res.error || "Failed", "error");
-      else {
-        showToast("Settings saved", "success");
-        router.refresh();
       }
     });
   }
@@ -162,31 +148,12 @@ export default function AdminProfileHub({
         </div>
       </div>
 
-      {/* Platform settings */}
-      <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
-        <h3 className="font-heading font-semibold text-text-primary text-sm">
-          Account Settings
+      {/* Platform settings — payment mode, Telegram support, price, bank */}
+      <div className="rounded-3xl border border-border bg-surface p-4 shadow-card">
+        <h3 className="font-heading font-extrabold text-text-primary text-sm mb-3">
+          Platform Settings
         </h3>
-        <Input
-          label="Subscription price (₦)"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          type="number"
-        />
-        <Input label="Bank name" value={bank} onChange={(e) => setBank(e.target.value)} />
-        <Input
-          label="Account name"
-          value={accName}
-          onChange={(e) => setAccName(e.target.value)}
-        />
-        <Input
-          label="Account number"
-          value={accNum}
-          onChange={(e) => setAccNum(e.target.value)}
-        />
-        <Button loading={pending} onClick={saveAccountSettings} className="w-full sm:w-auto">
-          Save settings
-        </Button>
+        <SettingsForm initial={settings} onSaved={() => router.refresh()} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPaymentsPage() {
   const payments = await adminListPayments();
-  const pending = payments.filter((p) => p.status === "pending").length;
+  const pending = payments.filter(
+    (p) => p.status === "pending" || p.status === "processing"
+  ).length;
 
   const withUrls = await Promise.all(
     payments.map(async (p) => {
@@ -40,6 +42,11 @@ export default async function AdminPaymentsPage() {
                 <p className="text-xs text-text-muted">
                   {p.student_email} · ₦{Number(p.amount).toLocaleString()} · {p.method}
                 </p>
+                {(p as { flw_ref?: string | null }).flw_ref && (
+                  <p className="text-[11px] text-text-muted mt-0.5">
+                    Ref {(p as { flw_ref?: string }).flw_ref}
+                  </p>
+                )}
                 <p className="text-xs text-text-muted">
                   {new Date(p.created_at).toLocaleString()}
                 </p>
@@ -60,7 +67,9 @@ export default async function AdminPaymentsPage() {
                     ? "success"
                     : p.status === "rejected"
                       ? "error"
-                      : "warning"
+                      : p.status === "processing"
+                        ? "info"
+                        : "warning"
                 }
               >
                 {p.status}

@@ -6,7 +6,7 @@ export async function getResultsForStudent(studentId: string) {
     const supabase = await createClient();
     const { data } = await supabase
       .from("cbt_attempts")
-      .select("*, cbt_exams(title)")
+      .select("*, cbt_exams(title, subject_id, is_general)")
       .eq("student_id", studentId)
       .eq("status", "submitted")
       .order("submitted_at", { ascending: false });
@@ -21,7 +21,7 @@ export async function getAttemptById(attemptId: string, studentId: string) {
     const supabase = await createClient();
     const { data: attempt } = await supabase
       .from("cbt_attempts")
-      .select("*, cbt_exams(title, pass_mark, duration_mins)")
+      .select("*, cbt_exams(title, pass_mark, duration_mins, subject_id, is_general)")
       .eq("id", attemptId)
       .eq("student_id", studentId)
       .maybeSingle();

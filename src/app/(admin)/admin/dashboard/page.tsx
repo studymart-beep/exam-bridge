@@ -74,17 +74,19 @@ export default async function AdminDashboardPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { n: stats.students, l: "Students", bg: "bg-primary-light/60 border-primary/20", icon: "👥" },
-            { n: stats.activeSubs, l: "Active Subs", bg: "bg-accent-light/70 border-accent/30", icon: "✓" },
-            { n: stats.pendingPayments, l: "Pending Pay", bg: "bg-sky-50 border-sky-200", icon: "₦" },
-            { n: stats.subjects, l: "Subjects", bg: "bg-amber-50 border-amber-200", icon: "📚" },
+            { n: stats.students, l: "Students", bg: "bg-primary-light border-border-green", icon: "👥", tile: "bg-[#0E744E] text-white" },
+            { n: stats.activeSubs, l: "Active Subs", bg: "bg-accent-light border-border-gold", icon: "✓", tile: "bg-accent-dark text-white" },
+            { n: stats.pendingPayments, l: "Pending Pay", bg: "bg-calm-light border-border-blue", icon: "₦", tile: "bg-calm text-white" },
+            { n: stats.subjects, l: "Subjects", bg: "bg-coral-light border-coral/25", icon: "📚", tile: "bg-coral text-white" },
           ].map((s) => (
             <div
               key={s.l}
-              className={`text-center py-4 rounded-2xl border shadow-sm ${s.bg}`}
+              className={`text-center py-4 rounded-3xl border shadow-card ${s.bg}`}
             >
-              <div className="text-lg mb-1">{s.icon}</div>
-              <p className="font-heading text-xl font-bold text-primary">{s.n}</p>
+              <div className={`w-9 h-9 mx-auto mb-1.5 rounded-2xl grid place-items-center text-base icon-tile ${s.tile}`}>
+                {s.icon}
+              </div>
+              <p className="font-heading text-2xl font-extrabold text-text-primary">{s.n}</p>
               <p className="text-xs text-text-secondary mt-0.5">{s.l}</p>
             </div>
           ))}
@@ -210,21 +212,24 @@ export default async function AdminDashboardPage() {
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { href: "/admin/users", label: "Students", sub: "Manage accounts", iconBg: "bg-primary-light text-primary", icon: "👥" },
-            { href: "/admin/payments", label: "Payments", sub: "Approvals", iconBg: "bg-accent-light text-accent-dark", icon: "₦" },
-            { href: "/admin/subjects", label: "Subjects", sub: "Content", iconBg: "bg-sky-100 text-sky-700", icon: "📚" },
-            { href: "/admin/reports", label: "Reports", sub: "Insights", iconBg: "bg-amber-50 text-amber-700", icon: "📊" },
+            { href: "/admin/users", label: "Students", sub: "Manage accounts", iconBg: "bg-[#0E744E] text-white", icon: "👥" },
+            { href: "/admin/payments", label: "Payments", sub: "Approvals", iconBg: "bg-accent-dark text-white", icon: "₦" },
+            { href: "/admin/subjects", label: "Subjects", sub: "Content", iconBg: "bg-calm text-white", icon: "📚" },
+            { href: "/admin/reports", label: "Reports", sub: "Insights", iconBg: "bg-coral text-white", icon: "📊" },
           ].map((tile) => (
             <Link
               key={tile.href}
               href={tile.href}
-              className="rounded-2xl border border-amber-100 bg-surface p-4 min-h-[88px] shadow-sm"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 min-h-[80px] shadow-card hover:border-primary/40 transition-colors"
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm mb-2 ${tile.iconBg}`}>
+              <div className={`w-10 h-10 rounded-2xl grid place-items-center text-base icon-tile ${tile.iconBg}`}>
                 {tile.icon}
               </div>
-              <p className="text-sm font-semibold">{tile.label}</p>
-              <p className="text-xs text-text-muted mt-0.5">{tile.sub}</p>
+              <div className="min-w-0">
+                <p className="text-[13.5px] font-semibold text-text-primary truncate">{tile.label}</p>
+                <p className="text-[11px] text-text-muted mt-0.5 truncate">{tile.sub}</p>
+              </div>
+              <span className="ml-auto text-text-muted" aria-hidden>›</span>
             </Link>
           ))}
         </div>

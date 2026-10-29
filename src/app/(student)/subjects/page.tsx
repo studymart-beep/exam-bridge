@@ -1,9 +1,9 @@
 import StudentHeader from "@/components/student/StudentHeader";
-import Card from "@/components/ui/Card";
-import Section from "@/components/ui/Section";
-import SubjectCard from "@/components/student/SubjectCard";
+import SubjectsTabs from "@/components/student/SubjectsTabs";
 import GuestSubjectsList from "@/components/student/GuestSubjectsList";
+import Section from "@/components/ui/Section";
 import { listPublishedSubjects } from "@/lib/data/student/subjects";
+import { listMySubjects } from "@/lib/data/student/mySubjects";
 import { getCurrentProfile } from "@/lib/data/student/profile";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -31,13 +31,13 @@ export default async function SubjectsPage() {
   if (!profile) {
     return (
       <div className="min-h-screen">
-        <header className="sticky top-0 z-30 bg-surface/80 backdrop-blur border-b border-border/60">
+        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur border-b border-border/60">
           <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-            <h1 className="font-heading font-semibold text-text-primary">
+            <h1 className="font-heading font-extrabold text-text-primary">
               Subjects
             </h1>
             <div className="flex gap-3 text-sm">
-              <Link href="/login" className="text-primary font-medium">
+              <Link href="/login" className="text-primary font-semibold">
                 Log in
               </Link>
               <Link href="/register" className="text-primary font-semibold">
@@ -47,10 +47,12 @@ export default async function SubjectsPage() {
           </div>
         </header>
         <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
-          <Section title="Available subjects" tint="green">
-            <p className="text-sm text-text-secondary -mt-1 mb-2">
-              Preview subjects. Register to open full content.
-            </p>
+          <Section
+            title="Available subjects"
+            subtitle="Preview subjects. Register to open full content."
+            tint="green"
+            goldBar
+          >
             {list.length === 0 ? (
               <p className="text-sm text-text-muted text-center py-8">
                 No subjects yet.
@@ -72,41 +74,37 @@ export default async function SubjectsPage() {
     );
   }
 
+  const mine = await listMySubjects(profile.id);
+  const mineIds = new Set(mine.map((s) => s.id));
+
+  const mapRow = (s: (typeof list)[number]) => ({
+    id: s.id,
+    name: s.name,
+    slug: s.slug,
+    description: s.description || "",
+    letter: s.letter || s.name.charAt(0),
+    color: s.color || "#0A8B5B",
+    bgColor: s.bg_color || "#DDF8E8",
+    topicCount: counts[s.id] || 0,
+  });
+
+  // My Subjects first inside "All Subjects" so selections stay on top
+  const all = [...list]
+    .sort((a, b) => Number(mineIds.has(b.id)) - Number(mineIds.has(a.id)))
+    .map(mapRow);
+
   return (
     <div>
       <StudentHeader
         title="Subjects"
         userName={profile.full_name || "Student"}
       />
-      <div className="px-4 sm:px-6 py-5 max-w-3xl mx-auto">
-        <Section title="Your subjects" tint="green">
-          {list.length === 0 ? (
-            <Card className="text-center py-10" tint="green">
-              <p className="text-sm text-text-muted">
-                No subjects yet. Check back soon.
-              </p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {list.map((s, idx) => (
-                <SubjectCard
-                  key={s.id}
-                  index={idx}
-                  subject={{
-                    id: s.id,
-                    name: s.name,
-                    slug: s.slug,
-                    description: s.description || "",
-                    letter: s.letter || s.name.charAt(0),
-                    color: s.color || "#166534",
-                    bgColor: s.bg_color || "#DCFCE7",
-                    topicCount: counts[s.id] || 0,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </Section>
+      <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto">
+        <SubjectsTabs
+          mine={mine.map(mapRow)}
+          all={all}
+          hasPicks={mine.length > 0}
+        />
       </div>
     </div>
   );

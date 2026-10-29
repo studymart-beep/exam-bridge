@@ -27,7 +27,9 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 text-error text-sm">{error}</div>
+        <div className="p-3 rounded-2xl bg-coral-light text-coral-dark text-sm border border-coral/25">
+          {error}
+        </div>
       )}
       <Input
         name="email"

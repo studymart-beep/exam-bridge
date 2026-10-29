@@ -10,6 +10,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+/**
+ * Reference styling: 12px radius, emerald fill, white 700 label, soft
+ * green-tinted shadow, no border.
+ */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -25,22 +29,22 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const base =
-      "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
+      "inline-flex items-center justify-center gap-2 font-heading font-bold rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] no-tap";
 
     const variants = {
       primary:
-        "bg-primary text-white hover:bg-primary-dark hover:shadow-glow shadow-soft",
+        "bg-primary text-white hover:bg-primary-hover shadow-[0_3px_10px_rgba(5,101,65,0.18)] hover:shadow-[0_6px_18px_-4px_rgba(5,101,65,0.3)]",
       secondary:
-        "bg-secondary text-text-primary hover:bg-accent shadow-soft font-semibold",
+        "bg-secondary text-primary-dark hover:bg-accent shadow-soft font-bold",
       ghost:
         "bg-transparent text-text-secondary hover:bg-primary-light hover:text-primary",
-      danger: "bg-error text-white hover:bg-red-700",
+      danger: "bg-coral text-white hover:bg-coral-dark shadow-soft",
       outline:
-        "bg-surface text-primary border-2 border-primary hover:bg-primary-light",
+        "bg-surface text-primary border border-primary/40 hover:bg-primary-light hover:border-primary",
     };
 
     const sizes = {
-      sm: "min-h-9 h-9 px-3 text-sm",
+      sm: "min-h-9 h-9 px-3.5 text-[13px]",
       md: "min-h-11 h-11 px-5 text-sm",
       lg: "min-h-12 h-12 px-6 text-base",
     };
@@ -48,13 +52,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={cn(
-          base,
-          variants[variant],
-          sizes[size],
-          fullWidth && "w-full",
-          className
-        )}
+        className={cn(base, variants[variant], sizes[size], fullWidth && "w-full", className)}
         disabled={disabled || loading}
         {...props}
       >

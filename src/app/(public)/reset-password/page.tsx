@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import Logo from "@/components/brand/Logo";
+import AuthShell from "@/components/shared/AuthShell";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Button from "@/components/ui/Button";
 import { updatePassword } from "@/app/actions/auth";
@@ -62,52 +62,44 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4 py-10 bg-gradient-to-br from-primary-dark via-primary to-accent-dark">
-      <div className="w-full max-w-[420px] rounded-2xl bg-surface shadow-elevated border border-border p-6 sm:p-8 space-y-5">
-        <div className="flex flex-col items-center text-center gap-2">
-          <Logo size={64} />
-          <h1 className="font-heading text-xl font-bold text-text-primary">
-            Set new password
-          </h1>
-          <p className="text-sm text-text-secondary">
-            Choose a new password for your account
-          </p>
-        </div>
-        <form onSubmit={onSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 rounded-xl bg-red-50 text-error text-sm">
-              {error}
-            </div>
-          )}
-          <PasswordInput
-            name="password"
-            label="New password"
-            required
-            minLength={6}
-            placeholder="Min 6 characters"
-            autoComplete="new-password"
-          />
-          <PasswordInput
-            name="confirmPassword"
-            label="Confirm password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-          />
-          <Button type="submit" fullWidth loading={loading || !ready}>
-            Update password
-          </Button>
-          <p className="text-center text-sm text-text-muted">
-            <Link
-              href="/login"
-              className="text-primary font-semibold hover:underline"
-            >
-              Back to login
-            </Link>
-          </p>
-        </form>
-      </div>
-    </div>
+    <AuthShell
+      title="Set new password"
+      subtitle="Choose a new password for your account"
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 rounded-2xl bg-coral-light text-coral-dark text-sm border border-coral/25">
+            {error}
+          </div>
+        )}
+        <PasswordInput
+          name="password"
+          label="New password"
+          required
+          minLength={6}
+          placeholder="Min 6 characters"
+          autoComplete="new-password"
+        />
+        <PasswordInput
+          name="confirmPassword"
+          label="Confirm password"
+          required
+          minLength={6}
+          autoComplete="new-password"
+        />
+        <Button type="submit" fullWidth loading={loading || !ready}>
+          Update password
+        </Button>
+        <p className="text-center text-sm text-text-muted">
+          <Link
+            href="/login"
+            className="text-primary font-semibold hover:underline"
+          >
+            Back to login
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   );
 }
 

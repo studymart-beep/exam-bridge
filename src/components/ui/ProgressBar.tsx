@@ -26,17 +26,17 @@ export default function ProgressBar({
   };
 
   const colors = {
-    primary: "bg-primary",
-    success: "bg-success",
-    warning: "bg-warning",
-    error: "bg-error",
+    primary: "bg-gradient-to-r from-primary/80 to-primary",
+    success: "bg-gradient-to-r from-[#34D399] to-success",
+    warning: "bg-gradient-to-r from-amber-300 to-warning",
+    error: "bg-gradient-to-r from-[#FF8A93] to-error",
   };
 
   return (
     <div className={cn("w-full", className)}>
       <div
         className={cn(
-          "w-full bg-primary-light rounded-full overflow-hidden",
+          "w-full bg-primary-light/80 rounded-full overflow-hidden",
           heights[size]
         )}
       >

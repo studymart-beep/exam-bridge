@@ -1,10 +1,12 @@
 /* Exam Bridge service worker — app shell + offline fallback */
-const CACHE_VERSION = "eb-v29-1";
+const CACHE_VERSION = "eb-v31-2";
 const SHELL = [
   "/offline.html",
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/logo.png",
+  "/pdf.worker.min.mjs",
 ];
 
 self.addEventListener("install", (event) => {

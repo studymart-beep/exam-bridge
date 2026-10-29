@@ -40,13 +40,13 @@ export default function AdminHeader({
       .toUpperCase() || "AD";
 
   return (
-    <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur border-b border-border">
-      <div className="px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-border">
+      <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <button
             type="button"
             onClick={() => openSidebar?.()}
-            className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-secondary hover:bg-primary-light hover:text-primary"
+            className="lg:hidden min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl bg-primary-light border border-border-green text-primary"
             aria-label="Open menu"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,7 +54,7 @@ export default function AdminHeader({
             </svg>
           </button>
           <div className="min-w-0">
-            <h1 className="text-lg font-heading font-semibold text-text-primary truncate">
+            <h1 className="text-lg font-heading font-extrabold text-text-primary truncate">
               {title}
             </h1>
             {subtitle && (

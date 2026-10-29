@@ -51,6 +51,9 @@ export default async function AdminProfilePage() {
             bank_name: settings.bank_name || "",
             account_name: settings.account_name || "",
             account_number: settings.account_number || "",
+            telegram_support_url: settings.telegram_support_url || "",
+            payment_mode: settings.payment_mode || "manual",
+            flutterwave_public_key: settings.flutterwave_public_key || "",
           }}
         />
       </div>

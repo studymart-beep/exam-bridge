@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { HTMLAttributes, forwardRef } from "react";
 
-export type CardTint = "green" | "gold" | "blue" | "white" | "cream";
+export type CardTint = "green" | "gold" | "blue" | "white" | "cream" | "coral";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: "none" | "sm" | "md" | "lg";
@@ -14,11 +14,12 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const tintClass: Record<CardTint, string> = {
-  white: "bg-surface border-border/80",
-  cream: "bg-cream border-border/80",
+  white: "bg-surface border-border",
+  cream: "bg-cream border-border",
   green: "bg-primary-light border-border-green",
-  gold: "bg-accent-light border-border",
+  gold: "bg-accent-light border-border-gold",
   blue: "bg-calm-light border-border-blue",
+  coral: "bg-coral-light border-coral/30",
 };
 
 const rotate: CardTint[] = ["green", "gold", "blue"];
@@ -27,11 +28,9 @@ export function cardTintForIndex(index: number): CardTint {
   return rotate[((index % 3) + 3) % 3];
 }
 
+/** Reference styling: 20-22px radius, warm white, green-tinted shadow */
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  (
-    { className, padding = "md", tint, tintIndex, children, ...props },
-    ref
-  ) => {
+  ({ className, padding = "md", tint, tintIndex, children, ...props }, ref) => {
     const paddings = {
       none: "",
       sm: "p-3",
@@ -47,7 +46,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-2xl border shadow-soft text-text-primary",
+          "rounded-3xl border shadow-card text-text-primary",
           tintClass[resolved],
           paddings[padding],
           className

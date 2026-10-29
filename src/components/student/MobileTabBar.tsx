@@ -16,8 +16,8 @@ export default function MobileTabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border safe-bottom shadow-[0_-4px_12px_rgba(22,101,52,0.06)]">
-      <div className="flex items-stretch justify-around h-14 max-w-lg mx-auto">
+    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur border-t border-border safe-bottom shadow-[0_-6px_20px_rgba(11,66,50,0.10)]">
+      <div className="flex items-stretch justify-around h-16 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const active =
             pathname === tab.href || pathname.startsWith(tab.href + "/");
@@ -26,14 +26,14 @@ export default function MobileTabBar() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center text-[10px] font-medium gap-0.5 min-h-[44px]",
+                "flex-1 flex flex-col items-center justify-center text-[10.5px] font-semibold gap-0.5 min-h-[44px]",
                 active ? "text-primary" : "text-text-muted"
               )}
             >
               <span
                 className={cn(
-                  "w-1.5 h-1.5 rounded-full mb-0.5",
-                  active ? "bg-accent" : "bg-transparent"
+                  "w-5 h-[3px] rounded-full mb-1 transition-all",
+                  active ? "bg-secondary" : "bg-transparent"
                 )}
               />
               {tab.label}

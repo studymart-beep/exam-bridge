@@ -31,7 +31,7 @@ export default function AdminPwaMeta() {
       theme.name = "theme-color";
       document.head.appendChild(theme);
     }
-    theme.content = "#166534";
+    theme.content = "#0B4232";
 
     let apple = document.querySelector(
       'link[rel="apple-touch-icon"]'

@@ -146,7 +146,9 @@ export default function PDFViewerSecure({
 
   const openPdfData = useCallback(async (data: ArrayBuffer) => {
     const pdfjs = await import("pdfjs-dist");
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+    // Bundled locally (public/pdf.worker.min.mjs, precached by the service
+    // worker) so the reader renders offline — a CDN worker would fail.
+    pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
     // Copy buffer so pdf.js owns a stable ArrayBuffer
     const copy = data.slice(0);
     const doc = await pdfjs.getDocument({ data: copy }).promise;

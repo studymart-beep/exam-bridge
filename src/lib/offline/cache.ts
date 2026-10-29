@@ -14,9 +14,18 @@ export type CacheMeta = {
   subjectTitle?: string;
   topicTitle?: string;
   coverUrl?: string | null;
+  /** bumped whenever the item is opened, used for LRU eviction */
+  lastOpenedAt?: number;
 };
 
 type CacheRecord = { key: string; blob: Blob; meta: CacheMeta };
+
+export function cacheKeyFor(
+  type: CacheMeta["type"],
+  materialId: string
+): string {
+  return `${type}:${materialId}`;
+}
 
 let activeKey: string | null = null;
 
@@ -58,10 +67,15 @@ export async function getFile(
 ): Promise<{ blob: Blob; meta: CacheMeta } | null> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, "readonly");
+    const tx = db.transaction(STORE, "readwrite");
     const req = tx.objectStore(STORE).get(key);
     req.onsuccess = () => {
       const row = req.result as CacheRecord | undefined;
+      if (row) {
+        // touch for LRU — offline opens should not evict recent items
+        row.meta = { ...row.meta, lastOpenedAt: Date.now() };
+        tx.objectStore(STORE).put(row);
+      }
       resolve(row ? { blob: row.blob, meta: row.meta } : null);
     };
     req.onerror = () => reject(req.error);
@@ -110,7 +124,11 @@ export async function ensureSpace(bytesNeeded: number): Promise<void> {
   if (free >= bytesNeeded + MIN_FREE) return;
 
   const files = await listFiles();
-  files.sort((a, b) => a.meta.downloadedAt - b.meta.downloadedAt);
+  files.sort(
+    (a, b) =>
+      (a.meta.lastOpenedAt ?? a.meta.downloadedAt) -
+      (b.meta.lastOpenedAt ?? b.meta.downloadedAt)
+  );
   for (const f of files) {
     if (f.key === activeKey) continue;
     await deleteFile(f.key);

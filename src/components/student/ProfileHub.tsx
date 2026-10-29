@@ -16,6 +16,8 @@ import LogoutButton from "@/components/shared/LogoutButton";
 import BiometricSetup from "@/components/shared/BiometricSetup";
 import { cn } from "@/lib/utils";
 import AvatarUpload from "@/components/shared/AvatarUpload";
+import SubjectPicker, { type PickerSubject } from "@/components/shared/SubjectPicker";
+import { saveMySubjects } from "@/lib/actions/student/subjects";
 import { NIGERIA_STATES } from "@/lib/constants/nigeria-states";
 
 export type ProfileHubProps = {
@@ -27,6 +29,12 @@ export type ProfileHubProps = {
   active: boolean;
   expiresAt: string | null;
   daysLeft: number | null;
+  /** every published subject, for the picker */
+  allSubjects?: PickerSubject[];
+  /** currently selected subject ids */
+  mySubjectIds?: string[];
+  /** Telegram support link from admin settings */
+  supportUrl?: string | null;
   stats: {
     subjects: number;
     avgProgress: number;
@@ -51,6 +59,9 @@ export default function ProfileHub({
   active,
   expiresAt,
   daysLeft,
+  allSubjects = [],
+  mySubjectIds = [],
+  supportUrl = null,
   stats,
 }: ProfileHubProps) {
   const { showToast } = useToast();
@@ -64,6 +75,23 @@ export default function ProfileHub({
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [pending, startTransition] = useTransition();
+  const [subjects, setSubjects] = useState<string[]>(mySubjectIds);
+  const [subjPending, startSubjTransition] = useTransition();
+
+  function saveSubjects() {
+    if (!subjects.length) {
+      showToast("Select at least one subject", "error");
+      return;
+    }
+    startSubjTransition(async () => {
+      const res = await saveMySubjects(subjects);
+      if (!res.success) showToast(res.error || "Failed", "error");
+      else {
+        showToast("My Subjects updated", "success");
+        router.refresh();
+      }
+    });
+  }
 
   function saveProfile() {
     startTransition(async () => {
@@ -154,8 +182,8 @@ export default function ProfileHub({
     },
     {
       label: "Help & Support",
-      sub: "FAQs, contact us",
-      href: "mailto:support@exambridge.app",
+      sub: supportUrl ? "Chat with us on Telegram" : "Email the support team",
+      href: supportUrl || "mailto:support@exambridge.app",
     },
   ];
 
@@ -256,6 +284,28 @@ export default function ProfileHub({
           </Button>
         </Link>
       </div>
+
+      {/* My subjects — personalisation */}
+      {allSubjects.length > 0 && (
+        <div className="rounded-3xl border border-border bg-surface p-4 space-y-3 shadow-card">
+          <div>
+            <h3 className="font-heading font-extrabold text-text-primary text-sm">
+              My Subjects
+            </h3>
+            <p className="text-xs text-text-muted mt-0.5">
+              These drive your Subjects, CBT, Progress and Results views.
+            </p>
+          </div>
+          <SubjectPicker
+            subjects={allSubjects}
+            value={subjects}
+            onChange={setSubjects}
+          />
+          <Button loading={subjPending} onClick={saveSubjects} className="w-full sm:w-auto">
+            Save subjects
+          </Button>
+        </div>
+      )}
 
       {/* Quick tiles */}
       <div className="grid grid-cols-2 gap-3">

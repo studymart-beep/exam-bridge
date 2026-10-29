@@ -5,11 +5,13 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Section from "@/components/ui/Section";
 import SubscriptionPrompt from "@/components/student/SubscriptionPrompt";
+import SupportFab from "@/components/shared/SupportFab";
 import {
   getCurrentProfile,
   isSubscriptionActive,
 } from "@/lib/data/student/profile";
 import { createClient } from "@/lib/supabase/server";
+import { getSupportUrl } from "@/lib/data/platformSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ const quickTiles = [
 export default async function DashboardPage() {
   const profile = await getCurrentProfile();
   const subscribed = isSubscriptionActive(profile);
+  const supportUrl = await getSupportUrl();
   const firstName =
     profile?.full_name?.split(" ")[0] ||
     profile?.email?.split("@")[0] ||
@@ -183,7 +186,7 @@ export default async function DashboardPage() {
       <SubscriptionPrompt show={!subscribed} />
       <div className="px-4 sm:px-6 py-5 max-w-5xl mx-auto space-y-5">
         {/* Hero */}
-        <div className="relative w-full h-[200px] md:h-[280px] rounded-2xl overflow-hidden">
+        <div className="relative w-full h-[200px] md:h-[280px] rounded-3xl overflow-hidden shadow-tile">
           <Image
             src="/images/dashboard-hero.png"
             alt=""
@@ -192,13 +195,26 @@ export default async function DashboardPage() {
             priority
             sizes="(max-width: 1024px) 100vw, 1200px"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-dark/95 via-primary/75 to-accent-dark/50" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/95 via-primary-dark/80 to-primary/45" />
+          {/* script accent, top-right (reference) */}
+          <div className="absolute top-4 right-5 text-right select-none" aria-hidden>
+            <p className="script-note text-white text-2xl sm:text-3xl">
+              Future Starts Here
+            </p>
+            <span className="script-underline ml-auto w-32" />
+          </div>
           <div className="absolute inset-0 p-5 sm:p-8 flex flex-col justify-end">
-            <h1 className="font-heading text-xl sm:text-2xl md:text-3xl font-bold text-white">
-              Welcome back, {firstName}
+            <p className="text-[13px] text-[#D1FAE5]">Welcome back,</p>
+            <h1 className="font-heading text-2xl sm:text-3xl md:text-[34px] font-extrabold text-white leading-tight">
+              {firstName} 👋
             </h1>
-            <p className="text-sm text-white/85 mt-1">
+            <p className="text-[13px] text-[#D1FAE5] mt-1">
               Your JAMB journey continues.
+            </p>
+            <p className="text-[13px] text-[#D1FAE5]/85 mt-2 leading-snug">
+              Small steps today,
+              <br />
+              big dreams tomorrow.
             </p>
             {!subscribed && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -385,24 +401,38 @@ export default async function DashboardPage() {
         )}
 
         {/* Quick tiles */}
-        <Section title="Quick actions" tint="gold">
+        <Section
+          title="Quick actions"
+          subtitle="Jump right into what you need."
+          tint="gold"
+          goldBar
+        >
         <div className="grid grid-cols-2 gap-3">
           {[
-            { ...quickTiles[0], iconBg: "bg-primary-light text-primary", icon: "📖" },
-            { ...quickTiles[1], iconBg: "bg-accent-light text-accent-dark", icon: "📝" },
-            { ...quickTiles[2], iconBg: "bg-sky-100 text-sky-700", icon: "📊" },
-            { ...quickTiles[3], iconBg: "bg-amber-50 text-amber-700", icon: "🏆" },
+            { ...quickTiles[0], iconBg: "bg-[#0E744E] text-white", icon: "📖" },
+            { ...quickTiles[1], iconBg: "bg-calm text-white", icon: "🗒" },
+            { ...quickTiles[2], iconBg: "bg-plum text-white", icon: "📊" },
+            { ...quickTiles[3], iconBg: "bg-coral text-white", icon: "🏆" },
           ].map((tile) => (
             <Link
               key={tile.href}
               href={tile.href}
-              className="rounded-2xl border border-amber-100 bg-surface p-4 hover:border-primary/30 min-h-[88px] shadow-sm"
+              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 hover:border-primary/40 min-h-[80px] shadow-card transition-colors"
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm mb-2 ${tile.iconBg}`}>
+              <span className={`icon-tile w-10 h-10 text-base ${tile.iconBg}`}>
                 {tile.icon}
-              </div>
-              <p className="text-sm font-semibold text-text-primary">{tile.label}</p>
-              <p className="text-xs text-text-muted mt-0.5">{tile.sub}</p>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold text-text-primary truncate">
+                  {tile.label}
+                </span>
+                <span className="block text-[11px] text-text-muted mt-0.5 truncate">
+                  {tile.sub}
+                </span>
+              </span>
+              <span className="text-text-muted" aria-hidden>
+                ›
+              </span>
             </Link>
           ))}
         </div>

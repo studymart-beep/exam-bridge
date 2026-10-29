@@ -6,6 +6,7 @@ import Section from "@/components/ui/Section";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import PDFViewerSecure from "@/components/student/PDFViewerSecure";
+import OfflineImageViewer from "@/components/student/OfflineImageViewer";
 import {
   listFiles,
   deleteFile,
@@ -55,6 +56,10 @@ export default function DownloadsClient() {
     url: string;
     title: string;
   } | null>(null);
+  const [imageOpen, setImageOpen] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -96,6 +101,7 @@ export default function DownloadsClient() {
     return map;
   }, [rows]);
 
+  /** Every cached type opens inside the app — never a browser tab. */
   async function openItem(row: Row) {
     try {
       const file = await getFile(row.key);
@@ -104,6 +110,8 @@ export default function DownloadsClient() {
         return;
       }
       if (row.meta.type === "pdf") {
+        setVideoOpen(null);
+        setImageOpen(null);
         setPdfOpen({
           blob: file.blob,
           id: row.meta.materialId,
@@ -111,21 +119,17 @@ export default function DownloadsClient() {
         });
         return;
       }
+      const url = URL.createObjectURL(file.blob);
       if (row.meta.type === "video") {
-        const url = URL.createObjectURL(file.blob);
+        setPdfOpen(null);
+        setImageOpen(null);
         setVideoOpen({ url, title: row.meta.title });
         return;
       }
-      // image — in-app overlay
-      const url = URL.createObjectURL(file.blob);
-      setVideoOpen(null);
-      // reuse a simple image fullscreen via videoOpen state pattern — dedicated
-      const imgWin = document.createElement("div");
-      // use videoOpen style for images instead:
-      showToast("Opening image…", "success");
-      // Store as videoOpen-like with image marker via data URL player below
+      // image — dedicated in-app viewer
       setPdfOpen(null);
-      setVideoOpen({ url, title: row.meta.title });
+      setVideoOpen(null);
+      setImageOpen({ url, title: row.meta.title });
     } catch {
       showToast("Could not open file", "error");
     }
@@ -134,6 +138,11 @@ export default function DownloadsClient() {
   function closeVideo() {
     if (videoOpen?.url) URL.revokeObjectURL(videoOpen.url);
     setVideoOpen(null);
+  }
+
+  function closeImage() {
+    if (imageOpen?.url) URL.revokeObjectURL(imageOpen.url);
+    setImageOpen(null);
   }
 
   async function confirmRemove() {
@@ -279,12 +288,22 @@ export default function DownloadsClient() {
               src={videoOpen.url}
               controls
               playsInline
+              autoPlay
               className="max-w-full max-h-full w-full"
               controlsList="nodownload"
               onContextMenu={(e) => e.preventDefault()}
             />
           </div>
         </div>
+      )}
+
+      {imageOpen && (
+        <OfflineImageViewer
+          url={imageOpen.url}
+          title={imageOpen.title}
+          offline
+          onClose={closeImage}
+        />
       )}
 
       <ConfirmDialog

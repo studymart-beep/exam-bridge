@@ -17,13 +17,13 @@ export function pageMeta(opts: {
       title: opts.title,
       description: opts.description,
       url,
-      images: [{ url: "/logo.png", alt: "Exam Bridge" }],
+      images: [{ url: "/logo-1024.png", width: 1024, height: 1024, alt: "Exam Bridge" }],
     },
     twitter: {
       card: "summary_large_image",
       title: opts.title,
       description: opts.description,
-      images: ["/logo.png"],
+      images: ["/logo-1024.png"],
     },
   };
 }

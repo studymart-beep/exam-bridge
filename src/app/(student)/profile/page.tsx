@@ -5,6 +5,8 @@ import {
   isSubscriptionActive,
 } from "@/lib/data/student/profile";
 import { resolveAvatarUrl } from "@/lib/data/profile";
+import { listSubjectsForPicker, getMySubjectIds } from "@/lib/data/student/mySubjects";
+import { getSupportUrl } from "@/lib/data/platformSettings";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -33,6 +35,11 @@ export default async function ProfilePage() {
   let subjects = 0;
   let avgProgress = 0;
   let attempts = 0;
+  const [allSubjects, mySubjectIds, supportUrl] = await Promise.all([
+    listSubjectsForPicker(),
+    getMySubjectIds(profile.id),
+    getSupportUrl(),
+  ]);
 
   try {
     const supabase = await createClient();
@@ -80,6 +87,9 @@ export default async function ProfilePage() {
           active={active}
           expiresAt={expiresAt}
           daysLeft={daysLeft}
+          allSubjects={allSubjects}
+          mySubjectIds={mySubjectIds}
+          supportUrl={supportUrl}
           stats={{
             subjects,
             avgProgress,

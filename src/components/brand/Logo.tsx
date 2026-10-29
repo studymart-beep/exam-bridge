@@ -10,7 +10,11 @@ interface LogoProps {
   variant?: "icon" | "full";
 }
 
-/** Official Exam Bridge mark (recolored logo asset) */
+/**
+ * Official Exam Bridge mark — the raw circular logo only.
+ * No background box, tile, border, shadow or container: the asset itself is a
+ * circle on a transparent canvas (see scripts/gen-brand-assets.py).
+ */
 export default function Logo({
   size = 32,
   className,
@@ -27,7 +31,7 @@ export default function Logo({
         alt={wordmark ? "Exam Bridge" : ""}
         width={size}
         height={size}
-        className="object-contain"
+        className="rounded-full bg-transparent shadow-none"
         priority={size >= 40}
       />
       {wordmark && (

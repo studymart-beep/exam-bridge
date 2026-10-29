@@ -29,14 +29,14 @@ export const metadata: Metadata = {
     description:
       "Video lessons, PDF study notes, and CBT practice for JAMB and WAEC.",
     url: SITE,
-    images: [{ url: "/logo.png", width: 736, height: 736, alt: "Exam Bridge" }],
+    images: [{ url: "/logo-1024.png", width: 1024, height: 1024, alt: "Exam Bridge" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Exam Bridge — Ace JAMB & WAEC with Focused Practice",
     description:
       "Video lessons, PDF study notes, and CBT practice for JAMB and WAEC.",
-    images: ["/logo.png"],
+    images: ["/logo-1024.png"],
   },
   icons: {
     icon: [
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#166534",
+  themeColor: "#0B4232",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
