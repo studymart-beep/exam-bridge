@@ -85,6 +85,7 @@ export default async function SubjectsPage() {
     letter: s.letter || s.name.charAt(0),
     color: s.color || "#0A8B5B",
     bgColor: s.bg_color || "#DDF8E8",
+    thumbnailUrl: s.thumbnail_url || null,
     topicCount: counts[s.id] || 0,
   });
 

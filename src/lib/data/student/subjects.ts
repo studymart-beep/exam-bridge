@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { resolveSubjectThumbnail } from "@/lib/actions/student/thumbnail";
 
 export type StudentSubject = {
   id: string;
@@ -8,6 +9,7 @@ export type StudentSubject = {
   letter: string | null;
   color: string | null;
   bg_color: string | null;
+  thumbnail_url: string | null;
   order_index: number;
   general_cbt_id: string | null;
 };
@@ -31,7 +33,13 @@ export async function listPublishedSubjects(): Promise<StudentSubject[]> {
       .select("*")
       .eq("is_active", true)
       .order("order_index");
-    return (data as StudentSubject[]) || [];
+    const rows = (data as StudentSubject[]) || [];
+    return Promise.all(
+      rows.map(async (row) => ({
+        ...row,
+        thumbnail_url: await resolveSubjectThumbnail(row.thumbnail_url),
+      }))
+    );
   } catch {
     return [];
   }
@@ -46,7 +54,12 @@ export async function getSubjectBySlug(slug: string): Promise<StudentSubject | n
       .eq("slug", slug)
       .eq("is_active", true)
       .maybeSingle();
-    return (data as StudentSubject) || null;
+    const row = data as StudentSubject | null;
+    if (!row) return null;
+    return {
+      ...row,
+      thumbnail_url: await resolveSubjectThumbnail(row.thumbnail_url),
+    };
   } catch {
     return null;
   }

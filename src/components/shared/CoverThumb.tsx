@@ -54,9 +54,15 @@ export default function CoverThumb({
       aria-hidden
     >
       {kind === "video" ? (
-        <span className="w-12 h-12 rounded-full bg-white/25 text-white flex items-center justify-center text-xl border border-white/30 pl-0.5">
-          ▶
-        </span>
+        <>
+          {/* "somebody learning" — a quiet illustration in front of the video card */}
+          <svg className="w-9 h-9 text-white/85" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="7.5" r="3" />
+            <path d="M2.8 20a6.5 6.5 0 0112.4 0" />
+            <rect x="14" y="9" width="9" height="6" rx="1.5" transform="rotate(0)" />
+            <path d="M18 11.2v1.6l1.5.9-1.5.9" />
+          </svg>
+        </>
       ) : (
         <span className="text-white/90 font-heading font-bold text-sm tracking-wide">
           {kind === "pdf" ? "PDF" : "IMG"}

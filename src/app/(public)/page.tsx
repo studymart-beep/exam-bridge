@@ -95,35 +95,43 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="page-decor min-h-screen">
-        {/* Header — white bar, two-tone wordmark, single emerald CTA */}
-        <header className="sticky top-0 z-30 border-b border-border/80 bg-surface/90 backdrop-blur-md">
-          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Logo size={40} />
-              <span className="font-heading font-extrabold text-[19px] tracking-tight hidden sm:inline">
+        {/* Header — white bar, two-tone wordmark, fixed-height single CTA row.
+            Mobile: wordmark always visible, buttons in a compact row that never
+            overflows or reflows. */}
+        <header className="sticky top-0 z-40 border-b border-border/80 bg-surface/90 backdrop-blur-md">
+          <div className="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+            <Link
+              href="/"
+              className="flex items-center gap-2 min-w-0 flex-shrink-0"
+            >
+              <Logo size={34} className="sm:hidden" />
+              <Logo size={40} className="hidden sm:block" />
+              <span className="font-heading font-extrabold text-[17px] sm:text-[19px] tracking-tight whitespace-nowrap">
                 <span className="text-primary-dark">Exam</span>
                 <span className="text-primary">Bridge</span>
               </span>
             </Link>
-            <div className="flex items-center gap-2">
-              <Link href="/login">
-                <Button size="sm" variant="ghost">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <Link href="/login" className="shrink-0">
+                <Button size="sm" variant="ghost" className="px-2.5 sm:px-3.5">
                   Login
                 </Button>
               </Link>
-              <Link href="/register">
-                <Button size="sm">Start Learning</Button>
+              <Link href="/register" className="shrink-0">
+                <Button size="sm" className="px-3 sm:px-4">
+                  Start Learning
+                </Button>
               </Link>
             </div>
           </div>
         </header>
 
         {/* Hero copy */}
-        <section className="max-w-3xl mx-auto px-4 pt-10 pb-6 text-center">
+        <section className="max-w-3xl mx-auto px-4 pt-8 sm:pt-10 pb-6 text-center">
           <p className="text-[13px] font-semibold text-text-secondary tracking-[0.06em] mb-3">
             Learn • Prepare • Succeed
           </p>
-          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-text-primary leading-[1.08]">
+          <h1 className="font-heading text-[28px] leading-[1.12] sm:text-4xl md:text-5xl font-extrabold text-text-primary">
             Ace JAMB &amp; WAEC with focused practice
           </h1>
           <p className="mt-4 text-base sm:text-lg text-text-secondary max-w-xl mx-auto">
@@ -167,7 +175,7 @@ export default async function LandingPage() {
             Everything you need to prepare, practice and pass your exams.
           </p>
           <div className="mt-8 rounded-[22px] bg-surface border border-white/70 shadow-[0_6px_16px_rgba(23,122,83,0.13)] p-4 sm:p-6">
-            <div className="grid sm:grid-cols-3 gap-4 sm:gap-0 sm:divide-x divide-border-gold">
+            <div className="grid sm:grid-cols-3 gap-5 sm:gap-0 sm:divide-x divide-border-gold">
               {features.map((f) => (
                 <div key={f.title} className="gold-underline p-3 sm:px-5">
                   {/* mini panel illustration */}
@@ -255,6 +263,7 @@ export default async function LandingPage() {
                       letter: s.letter || s.name.charAt(0),
                       color: s.color || "#0A8B5B",
                       bgColor: s.bg_color || "#DDF8E8",
+                      thumbnailUrl: s.thumbnail_url || null,
                     }}
                   />
                 ))}

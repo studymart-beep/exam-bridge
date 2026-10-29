@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.subjects (
   letter text,
   color text DEFAULT '#1D4ED8',
   bg_color text DEFAULT '#DBEAFE',
+  thumbnail_url text,
   order_index int DEFAULT 0,
   is_active bool DEFAULT true,
   general_cbt_id uuid,

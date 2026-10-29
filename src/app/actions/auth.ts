@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { attachSubjectsForUser } from "@/lib/data/student/mySubjects";
+import { checkRate, clientIp } from "@/lib/security/rateLimit";
 
 export type AuthResult = { error?: string; success?: boolean };
 
@@ -40,6 +42,11 @@ function parseSubjectIds(raw: FormDataEntryValue | null): string[] {
 }
 
 export async function signUpStudent(formData: FormData): Promise<AuthResult> {
+  const hdrs = await headers();
+  const ip = clientIp(hdrs);
+  const { state: signUpState } = checkRate("signup", ip, hdrs);
+  if (!signUpState.ok) return { error: "Too many sign-ups from this device. Try again later." };
+
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
   const fullName = String(formData.get("fullName") || "").trim();
@@ -92,6 +99,11 @@ export async function signUpStudent(formData: FormData): Promise<AuthResult> {
 }
 
 export async function signInStudent(formData: FormData): Promise<AuthResult> {
+  const hdrs = await headers();
+  const ip = clientIp(hdrs);
+  const { state: loginState, markFailure } = checkRate("login", ip, hdrs);
+  if (!loginState.ok) return { error: GENERIC_AUTH_ERROR };
+
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
 
@@ -104,7 +116,10 @@ export async function signInStudent(formData: FormData): Promise<AuthResult> {
     email,
     password,
   });
-  if (error) return { error: GENERIC_AUTH_ERROR };
+  if (error) {
+    markFailure?.();
+    return { error: GENERIC_AUTH_ERROR };
+  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -114,6 +129,7 @@ export async function signInStudent(formData: FormData): Promise<AuthResult> {
 
   if (profile?.role !== "student") {
     await supabase.auth.signOut();
+    markFailure?.();
     return { error: GENERIC_AUTH_ERROR };
   }
 
@@ -121,10 +137,16 @@ export async function signInStudent(formData: FormData): Promise<AuthResult> {
 }
 
 export async function signInAdmin(formData: FormData): Promise<AuthResult> {
+  const hdrs = await headers();
+  const ip = clientIp(hdrs);
+  const { state: loginState, markFailure } = checkRate("login-admin", ip, hdrs);
+  if (!loginState.ok) return { error: GENERIC_AUTH_ERROR };
+
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
 
   if (!email || !password) {
+    markFailure?.();
     return { error: GENERIC_AUTH_ERROR };
   }
 
@@ -133,7 +155,10 @@ export async function signInAdmin(formData: FormData): Promise<AuthResult> {
     email,
     password,
   });
-  if (error) return { error: GENERIC_AUTH_ERROR };
+  if (error) {
+    markFailure?.();
+    return { error: GENERIC_AUTH_ERROR };
+  }
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -143,6 +168,7 @@ export async function signInAdmin(formData: FormData): Promise<AuthResult> {
 
   if (profile?.role !== "admin") {
     await supabase.auth.signOut();
+    markFailure?.();
     return { error: GENERIC_AUTH_ERROR };
   }
 

@@ -29,19 +29,23 @@ export async function createSubject(formData: FormData) {
     .maybeSingle();
   const order_index = (maxRow?.order_index ?? -1) + 1;
 
-  const { error } = await supabase.from("subjects").insert({
-    name,
-    slug: slugify(name),
-    description,
-    letter: name.charAt(0).toUpperCase(),
-    order_index,
-    is_active: true,
-  });
+  const { data, error } = await supabase
+    .from("subjects")
+    .insert({
+      name,
+      slug: slugify(name),
+      description,
+      letter: name.charAt(0).toUpperCase(),
+      order_index,
+      is_active: true,
+    })
+    .select("id")
+    .maybeSingle();
   if (error) return { success: false as const, error: error.message };
 
   revalidatePath("/admin/subjects");
   revalidatePath("/admin/dashboard");
-  return { success: true as const };
+  return { success: true as const, id: data?.id as string | undefined };
 }
 
 export async function updateSubject(formData: FormData) {

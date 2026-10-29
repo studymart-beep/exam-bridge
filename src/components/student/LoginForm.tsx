@@ -11,6 +11,7 @@ import { signInStudent } from "@/app/actions/auth";
 export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -38,6 +39,8 @@ export default function LoginForm() {
         placeholder="you@email.com"
         required
         autoComplete="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
       />
       <div>
         <PasswordInput
@@ -47,19 +50,26 @@ export default function LoginForm() {
           required
           autoComplete="current-password"
         />
-        <div className="mt-1.5 text-right">
+        <div className="mt-1.5 flex items-center justify-between">
           <Link
             href="/forgot-password"
             className="text-xs font-medium text-primary hover:underline"
           >
             Forgot password?
           </Link>
+          {/* subtle one-tap fingerprint — sits quietly beside the forgot link */}
+          <span className="sm:hidden inline-flex items-center gap- col justify-center mt-0.5">
+            <BiometricLoginButton email={email} subtle />
+          </span>
         </div>
       </div>
       <Button type="submit" fullWidth loading={loading}>
         Log in
       </Button>
-      <BiometricLoginButton variant="student" />
+      {/* fingerprint link below the button for returning users */}
+      <div className="text-center">
+        <BiometricLoginButton email={email} />
+      </div>
     </form>
   );
 }

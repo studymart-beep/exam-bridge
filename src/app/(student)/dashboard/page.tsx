@@ -231,27 +231,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <Section title="Overview" tint="green">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { n: subjectsCount, l: "Subjects", bg: "bg-primary-light/60 border-primary/20", icon: "📚" },
-            { n: `${avgProgress}%`, l: "Avg Progress", bg: "bg-accent-light/70 border-accent/30", icon: "📈" },
-            { n: attempts, l: "CBT Attempts", bg: "bg-sky-50 border-sky-200", icon: "✍️" },
-            { n: daysLeft !== null ? daysLeft : "—", l: "Days Left", bg: "bg-amber-50 border-amber-200", icon: "⏳" },
-          ].map((s) => (
-            <div
-              key={s.l}
-              className={`text-center py-4 rounded-2xl border shadow-sm ${s.bg}`}
-            >
-              <div className="text-lg mb-1">{s.icon}</div>
-              <p className="font-heading text-xl font-bold text-primary">{s.n}</p>
-              <p className="text-xs text-text-secondary mt-0.5">{s.l}</p>
-            </div>
-          ))}
-        </div>
-        </Section>
-
         {/* Progress ring + 7 day */}
         <Card className="flex flex-col sm:flex-row items-center gap-6 p-5">
           <div className="relative w-28 h-28 shrink-0">

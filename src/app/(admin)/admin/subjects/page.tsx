@@ -10,6 +10,8 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
+import SubjectThumbnailUpload from "@/components/admin/SubjectThumbnailUpload";
+import { saveSubjectThumbnail } from "@/lib/actions/student/thumbnail";
 import {
   createSubject,
   updateSubject,
@@ -23,6 +25,8 @@ type SubjectRow = {
   slug: string;
   description: string | null;
   order_index: number;
+  thumbnail_url?: string | null;
+  thumbnailSrc?: string | null;
   topic_count?: number;
 };
 
@@ -37,6 +41,8 @@ export default function AdminSubjectsPage() {
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [editThumb, setEditThumb] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -62,6 +68,8 @@ export default function AdminSubjectsPage() {
     setEditing(null);
     setName("");
     setDescription("");
+    setThumbnail(null);
+    setEditThumb(null);
     setModal(true);
   }
 
@@ -69,22 +77,43 @@ export default function AdminSubjectsPage() {
     setEditing(s);
     setName(s.name);
     setDescription(s.description || "");
+    setThumbnail(null);
+    setEditThumb(s.thumbnailSrc || s.thumbnail_url || null);
     setModal(true);
   }
 
-  function handleSave() {
+  async function handleSave() {
     const fd = new FormData();
     fd.set("name", name);
     fd.set("description", description);
     if (editing) fd.set("id", editing.id);
 
     startTransition(async () => {
-      const res = editing ? await updateSubject(fd) : await createSubject(fd);
+      const res = (editing ? await updateSubject(fd) : await createSubject(fd)) as
+        { success: boolean; error?: string; id?: string };
       if (!res.success) {
         showToast(res.error || "Failed", "error");
         return;
       }
-      showToast(editing ? "Subject updated" : "Subject created", "success");
+      if (thumbnail) {
+        const id = editing ? editing.id : res.id;
+        if (id) {
+          const saved = await saveSubjectThumbnail(id, thumbnail);
+          if (!saved.success) showToast(saved.error || "Could not save thumbnail", "error");
+          else showToast(editing ? "Subject updated" : "Subject created", "success");
+        } else {
+          showToast("Subject created. Open Edit to add its thumbnail.", "success");
+        }
+      } else {
+        showToast(
+          editing
+            ? "Subject updated"
+            : thumbnail
+              ? "Subject created. Open Edit to add its thumbnail."
+              : "Subject created",
+          "success"
+        );
+      }
       setModal(false);
       await load();
     });
@@ -114,10 +143,16 @@ export default function AdminSubjectsPage() {
         )}
         {rows.map((s) => (
           <Card key={s.id} className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {s.thumbnailSrc && (
+              <div className="w-20 h-14 rounded-xl overflow-hidden shrink-0">
+                <img src={s.thumbnailSrc} alt={s.name} className="w-full h-full object-cover" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h3 className="font-heading font-semibold text-text-primary">{s.name}</h3>
               <p className="text-xs text-text-muted mt-0.5">
                 /{s.slug} · {s.topic_count ?? 0} topics · order #{s.order_index}
+                {!s.thumbnailSrc && " · no thumbnail"}
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -170,6 +205,11 @@ export default function AdminSubjectsPage() {
         <div className="space-y-4">
           <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
           <Input label="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <SubjectThumbnailUpload
+            value={thumbnail}
+            previewUrl={editThumb}
+            onChange={(v) => setThumbnail(v)}
+          />
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setModal(false)}>
               Cancel

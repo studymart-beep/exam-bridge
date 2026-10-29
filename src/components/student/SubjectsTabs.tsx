@@ -18,6 +18,7 @@ export type SubjectRow = {
   color?: string;
   bgColor?: string;
   topicCount?: number;
+  thumbnailUrl?: string | null;
 };
 
 /**
@@ -111,6 +112,7 @@ export default function SubjectsTabs({
                   color: s.color,
                   bgColor: s.bgColor,
                   topicCount: s.topicCount,
+                  thumbnailUrl: s.thumbnailUrl,
                 }}
               />
             ))}

@@ -175,5 +175,46 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(u);
   }
 
-  return supabaseResponse;
+  // ---- Security headers — applied on the final response ----
+  const hardened = NextResponse.next({
+    request,
+    headers: {
+      // in case supabaseResponse carried cookies / edits, forward them
+      ...Object.fromEntries(supabaseResponse.headers.entries()),
+    },
+  });
+  hardened.headers.set("X-Content-Type-Options", "nosniff");
+  hardened.headers.set("X-Frame-Options", "DENY");
+  hardened.headers.set("Referrer-Policy", "no-referrer-when-downgrade");
+  hardened.headers.set("X-XSS-Protection", "0");
+  hardened.headers.set(
+    "Permissions-Policy",
+    "camera=(self), microphone=(), geolocation=(), payment=()"
+  );
+  if (process.env.NODE_ENV === "production") {
+    hardened.headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload"
+    );
+  }
+  // Copy any cookies set by the supabase session so auth still works.
+  const respCookies = supabaseResponse.cookies.getAll();
+  for (let i = 0; i < respCookies.length; i++) {
+    const { name, value, ...opts } = respCookies[i];
+    hardened.cookies.set(name, value, opts);
+  }
+  // Let Next apply a conservative Content-Security-Policy.
+  hardened.headers.set(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "font-src 'self' https://fonts.gstatic.com; " +
+      "img-src 'self' blob: data: https://images.unsplash.com; " +
+      "connect-src 'self' https://*.supabase.co https://api.flutterwave.com " +
+      "https://cdnjs.cloudflare.com https://*.cloudflarestream.com; " +
+      "frame-src 'self' https://*.flutterwave.com; " +
+      "object-src 'none'; base-uri 'self'; form-action 'self'"
+  );
+
+  return hardened;
 }
