@@ -39,6 +39,9 @@ CREATE TABLE IF NOT EXISTS public.subjects (
   created_at timestamptz DEFAULT now()
 );
 
+-- Existing installations: make sure v31 column exists even though the table does.
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS thumbnail_url text;
+
 CREATE TABLE IF NOT EXISTS public.topics (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   subject_id uuid REFERENCES public.subjects(id) ON DELETE CASCADE,
