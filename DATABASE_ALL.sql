@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.subjects (
   is_active bool DEFAULT true,
   general_cbt_id uuid,
   created_at timestamptz DEFAULT now()
-');
+);
 
 CREATE TABLE IF NOT EXISTS public.topics (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.materials (
   cover_url text,
   order_index int DEFAULT 0,
   created_at timestamptz DEFAULT now()
-');
+);
 
 CREATE TABLE IF NOT EXISTS public.cbt_exams (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
