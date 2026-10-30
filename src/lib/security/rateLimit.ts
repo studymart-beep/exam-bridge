@@ -1,5 +1,3 @@
-"use server";
-
 /**
  * Lightweight rate limiter for sensitive routes (sign up + login).
  *
